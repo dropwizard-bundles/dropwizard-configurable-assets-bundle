@@ -16,12 +16,19 @@
     <name>Dropwizard Configurable Asset Bundle</name>
     <description>An implementation of an AssetBundle for use in Dropwizard that allows user configuration.</description>
 
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
     <scm>
         <url>https://github.com/dropwizard-bundles/dropwizard-configurable-assets-bundle</url>
         <connection>scm:git:git@github.com:dropwizard-bundles/dropwizard-configurable-assets-bundle.git</connection>
         <developerConnection>scm:git:git@github.com:dropwizard-bundles/dropwizard-configurable-assets-bundle.git</developerConnection>
-      <tag>HEAD</tag>
-  </scm>
+    </scm>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -29,6 +36,14 @@
         <jetty.version>9.0.7.v20131107</jetty.version>
         <dropwizard.version>0.7.1</dropwizard.version>
     </properties>
+
+    <developers>
+        <developer>
+            <id>nbauernfeind</id>
+            <name>Nate Bauernfeind</name>
+            <url>http://github.com/nbauernfeind/</url>
+        </developer>
+    </developers>
 
     <dependencies>
         <dependency>
