@@ -1,4 +1,4 @@
-package com.bazaarvoice.dropwizard.assets;
+package com.nefariouszhen.dropwizard.assets;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Charsets;
