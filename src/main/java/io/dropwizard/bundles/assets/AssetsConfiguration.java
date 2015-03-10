@@ -1,4 +1,4 @@
-package com.nefariouszhen.dropwizard.assets;
+package io.dropwizard.bundles.assets;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -11,7 +11,7 @@ public class AssetsConfiguration {
     /**
      * Initialize cacheSpec to null so that whatever may be specified by code is able to be overridden by configuration.
      * If null the default cache spec of "maximumSize=100" will be used.
-     * @see com.nefariouszhen.dropwizard.assets.ConfiguredAssetsBundle#DEFAULT_CACHE_SPEC
+     * @see ConfiguredAssetsBundle#DEFAULT_CACHE_SPEC
      */
     @JsonProperty
     private String cacheSpec = null;

@@ -1,4 +1,4 @@
-package com.nefariouszhen.dropwizard.assets;
+package io.dropwizard.bundles.assets;
 
 import com.google.common.io.Resources;
 import io.dropwizard.jetty.setup.ServletEnvironment;

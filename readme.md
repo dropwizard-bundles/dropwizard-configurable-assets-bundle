@@ -12,7 +12,7 @@ to recompile source.
 
 ```xml
 <dependency>
-  <groupId>com.nefariouszhen.dropwizard</groupId>
+  <groupId>io.dropwizard-bundles</groupId>
   <artifactId>dropwizard-configurable-assets-bundle</artifactId>
   <version>0.8.0</version>
 </dependency>
