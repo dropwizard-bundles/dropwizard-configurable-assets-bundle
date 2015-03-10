@@ -1,4 +1,4 @@
-package com.bazaarvoice.dropwizard.assets;
+package com.nefariouszhen.dropwizard.assets;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
