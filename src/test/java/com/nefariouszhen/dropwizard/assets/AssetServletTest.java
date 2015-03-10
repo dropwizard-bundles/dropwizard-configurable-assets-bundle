@@ -3,9 +3,9 @@ package com.nefariouszhen.dropwizard.assets;
 import com.google.common.cache.CacheBuilderSpec;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.net.HttpHeaders;
-import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpTester;
+import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.http.MimeTypes;
 import org.eclipse.jetty.servlet.ServletTester;
 import org.junit.After;
@@ -15,7 +15,7 @@ import org.junit.Test;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.fest.assertions.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class AssetServletTest {
     private static final CacheBuilderSpec DEFAULT_CACHE_SPEC = CacheBuilderSpec.parse("maximumSize=100");
@@ -85,7 +85,7 @@ public class AssetServletTest {
         request = HttpTester.newRequest();
         request.setMethod("GET");
         request.setURI(DUMMY_SERVLET + "example.txt");
-        request.setVersion("HTTP/1.0");
+        request.setVersion(HttpVersion.HTTP_1_0);
     }
 
     @After
@@ -109,13 +109,15 @@ public class AssetServletTest {
         response = HttpTester.parseResponse(servletTester.getResponses(request.generate()));
         assertThat(response.getStatus())
                 .isEqualTo(200);
-        assertThat(MimeTypes.Type.TEXT_PLAIN_UTF_8.is(response.get(HttpHeader.CONTENT_TYPE)));
+        assertThat(MimeTypes.CACHE.get(response.get(HttpHeader.CONTENT_TYPE)))
+                .isEqualTo(MimeTypes.Type.TEXT_PLAIN_UTF_8);
 
         request.setURI(NOCHARSET_SERVLET + "example.txt");
         response = HttpTester.parseResponse(servletTester.getResponses(request.generate()));
         assertThat(response.getStatus())
                 .isEqualTo(200);
-        assertThat(MimeTypes.Type.TEXT_PLAIN.is(response.get(HttpHeader.CONTENT_TYPE)));
+        assertThat(response.get(HttpHeader.CONTENT_TYPE))
+                .isEqualTo(MimeTypes.Type.TEXT_PLAIN.toString());
     }
 
     @Test
@@ -155,10 +157,7 @@ public class AssetServletTest {
         final String secondEtag = response.get(HttpHeaders.ETAG);
 
         assertThat(firstEtag)
-                .isNotNull();
-        assertThat(firstEtag)
-                .isNotEmpty();
-        assertThat(firstEtag)
+                .isEqualTo("174a6dd7325e64c609eab14ab1d30b86")
                 .isEqualTo(secondEtag);
     }
 
@@ -172,7 +171,9 @@ public class AssetServletTest {
         final String secondEtag = response.get(HttpHeaders.ETAG);
 
         assertThat(firstEtag)
-                .isNotEqualTo(secondEtag);
+                .isEqualTo("174a6dd7325e64c609eab14ab1d30b86");
+        assertThat(secondEtag)
+                .isEqualTo("26ae56a90cd78c6720c544707d22110b");
     }
 
     @Test
@@ -211,15 +212,15 @@ public class AssetServletTest {
         response = HttpTester.parseResponse(servletTester.getResponses(request.generate()));
         final long lastModifiedTime = response.getDateField(HttpHeaders.LAST_MODIFIED);
 
-        request.setHeader(HttpHeaders.IF_MODIFIED_SINCE, HttpFields.formatDate(lastModifiedTime));
+        request.putDateField(HttpHeaders.IF_MODIFIED_SINCE, lastModifiedTime);
         response = HttpTester.parseResponse(servletTester.getResponses(request.generate()));
         final int statusWithMatchingLastModifiedTime = response.getStatus();
 
-        request.setHeader(HttpHeaders.IF_MODIFIED_SINCE, HttpFields.formatDate(lastModifiedTime - 100));
+        request.putDateField(HttpHeaders.IF_MODIFIED_SINCE, lastModifiedTime - 100);
         response = HttpTester.parseResponse(servletTester.getResponses(request.generate()));
         final int statusWithStaleLastModifiedTime = response.getStatus();
 
-        request.setHeader(HttpHeaders.IF_MODIFIED_SINCE, HttpFields.formatDate(lastModifiedTime + 100));
+        request.putDateField(HttpHeaders.IF_MODIFIED_SINCE, lastModifiedTime + 100);
         response = HttpTester.parseResponse(servletTester.getResponses(request.generate()));
         final int statusWithRecentLastModifiedTime = response.getStatus();
 
@@ -236,7 +237,8 @@ public class AssetServletTest {
         response = HttpTester.parseResponse(servletTester.getResponses(request.generate()));
         assertThat(response.getStatus())
                 .isEqualTo(200);
-        assertThat(MimeTypes.Type.TEXT_PLAIN_UTF_8.is(response.get(HttpHeader.CONTENT_TYPE)));
+        assertThat(MimeTypes.CACHE.get(response.get(HttpHeader.CONTENT_TYPE)))
+                .isEqualTo(MimeTypes.Type.TEXT_PLAIN_UTF_8);
     }
 
     @Test
@@ -245,7 +247,8 @@ public class AssetServletTest {
         response = HttpTester.parseResponse(servletTester.getResponses(request.generate()));
         assertThat(response.getStatus())
                 .isEqualTo(200);
-        assertThat(MimeTypes.Type.TEXT_HTML_UTF_8.is(response.get(HttpHeader.CONTENT_TYPE)));
+        assertThat(MimeTypes.CACHE.get(response.get(HttpHeader.CONTENT_TYPE)))
+                .isEqualTo(MimeTypes.Type.TEXT_HTML_UTF_8);
     }
 
     @Test
