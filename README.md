@@ -6,6 +6,8 @@ in their Dropwizard applications and take advantage of the ability to specify re
 disk instead of the classpath.  This allows developers to edit browser-interpreted files and reload them without needing
 to recompile source.
 
+[![Build Status](https://travis-ci.org/dropwizard-bundles/dropwizard-configurable-assets-bundle.png)](https://travis-ci.org/dropwizard-bundles/dropwizard-configurable-assets-bundle)
+
 ## Maven Setup
 
 ```xml
