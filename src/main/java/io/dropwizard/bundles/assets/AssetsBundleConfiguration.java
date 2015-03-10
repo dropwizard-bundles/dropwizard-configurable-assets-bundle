@@ -1,4 +1,4 @@
-package com.nefariouszhen.dropwizard.assets;
+package io.dropwizard.bundles.assets;
 
 public interface AssetsBundleConfiguration {
     /**
