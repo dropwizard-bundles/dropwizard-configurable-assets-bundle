@@ -34,13 +34,20 @@ public class AssetServletTest {
   private static final String RESOURCE_PATH = "/assets";
 
   // ServletTester expects to be able to instantiate the servlet with zero arguments
+  private static Iterable<Map.Entry<String, String>> resourceMapping(String resourcePath,
+                                                                     String uriPath) {
+    return ImmutableMap.<String, String>builder()
+            .put(resourcePath, uriPath)
+            .build()
+            .entrySet();
+  }
 
   public static class DummyAssetServlet extends AssetServlet {
     private static final long serialVersionUID = -1L;
 
     public DummyAssetServlet() {
-      super(RESOURCE_PATH, DUMMY_SERVLET, "index.htm", DEFAULT_CHARSET, DEFAULT_CACHE_SPEC,
-              EMPTY_OVERRIDES, EMPTY_MIMETYPES);
+      super(resourceMapping(RESOURCE_PATH, DUMMY_SERVLET), "index.htm", DEFAULT_CHARSET,
+              DEFAULT_CACHE_SPEC, EMPTY_OVERRIDES, EMPTY_MIMETYPES);
     }
   }
 
@@ -48,8 +55,8 @@ public class AssetServletTest {
     private static final long serialVersionUID = -1L;
 
     public NoIndexAssetServlet() {
-      super(RESOURCE_PATH, DUMMY_SERVLET, null, DEFAULT_CHARSET, DEFAULT_CACHE_SPEC,
-              EMPTY_OVERRIDES, EMPTY_MIMETYPES);
+      super(resourceMapping(RESOURCE_PATH, DUMMY_SERVLET), null, DEFAULT_CHARSET,
+              DEFAULT_CACHE_SPEC, EMPTY_OVERRIDES, EMPTY_MIMETYPES);
     }
   }
 
@@ -57,8 +64,8 @@ public class AssetServletTest {
     private static final long serialVersionUID = 1L;
 
     public RootAssetServlet() {
-      super("/", ROOT_SERVLET, null, DEFAULT_CHARSET, DEFAULT_CACHE_SPEC, EMPTY_OVERRIDES,
-              EMPTY_MIMETYPES);
+      super(resourceMapping("/", ROOT_SERVLET), null, DEFAULT_CHARSET, DEFAULT_CACHE_SPEC,
+              EMPTY_OVERRIDES, EMPTY_MIMETYPES);
     }
   }
 
@@ -66,15 +73,15 @@ public class AssetServletTest {
     private static final long serialVersionUID = 1L;
 
     public NoCharsetAssetServlet() {
-      super(RESOURCE_PATH, NOCHARSET_SERVLET, null, DEFAULT_CHARSET, DEFAULT_CACHE_SPEC,
-              EMPTY_OVERRIDES, EMPTY_MIMETYPES);
+      super(resourceMapping(RESOURCE_PATH, NOCHARSET_SERVLET), null, DEFAULT_CHARSET,
+              DEFAULT_CACHE_SPEC, EMPTY_OVERRIDES, EMPTY_MIMETYPES);
       setDefaultCharset(null);
     }
   }
 
   public static class MimeMappingsServlet extends AssetServlet {
     public MimeMappingsServlet() {
-      super(RESOURCE_PATH, MIME_SERVLET, null, DEFAULT_CHARSET, DEFAULT_CACHE_SPEC,
+      super(resourceMapping(RESOURCE_PATH, MIME_SERVLET), null, DEFAULT_CHARSET, DEFAULT_CACHE_SPEC,
               EMPTY_OVERRIDES, EMPTY_MIMETYPES);
       setDefaultCharset(null);
       Map<String, String> mimeMappings = new HashMap<String, String>();

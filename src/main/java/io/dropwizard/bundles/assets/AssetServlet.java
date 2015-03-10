@@ -2,7 +2,6 @@ package io.dropwizard.bundles.assets;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheBuilderSpec;
@@ -10,6 +9,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.cache.Weigher;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
@@ -42,7 +42,6 @@ public class AssetServlet extends HttpServlet {
   private static final MediaType DEFAULT_MEDIA_TYPE = MediaType.HTML_UTF_8;
   private static final CharMatcher SLASHES = CharMatcher.is('/');
 
-  private final transient AssetLoader loader;
   private final transient LoadingCache<String, Asset> cache;
   private final transient MimeTypes mimeTypes;
 
@@ -58,24 +57,24 @@ public class AssetServlet extends HttpServlet {
    * serve a file with that name in that directory. If a directory is requested and {@code
    * indexFile} is null, it will serve a 404.
    *
-   * @param resourcePath   the base URL from which assets are loaded
-   * @param uriPath        the URI path fragment in which all requests are rooted
-   * @param indexFile      the filename to use when directories are requested, or null to serve no
-   *                       indexes
-   * @param defaultCharset the default character set
-   * @param spec           the CacheBuilderSpec to use
-   * @param overrides      the path overrides
-   * @param mimeTypes      the mimeType overrides
+   * @param resourcePathToUriPathMapping A mapping from base URL's from which assets are loaded to
+   *                                     the URI path fragment in which the requests for that asset
+   *                                     are rooted
+   * @param indexFile                    the filename to use when directories are requested, or null
+   *                                     to serve no indexes
+   * @param defaultCharset               the default character set
+   * @param spec                         the CacheBuilderSpec to use
+   * @param overrides                    the path overrides
+   * @param mimeTypes                    the mimeType overrides
    */
-  public AssetServlet(String resourcePath,
-                      String uriPath,
+  public AssetServlet(Iterable<Map.Entry<String, String>> resourcePathToUriPathMapping,
                       String indexFile,
                       Charset defaultCharset,
                       CacheBuilderSpec spec,
                       Iterable<Map.Entry<String, String>> overrides,
                       Iterable<Map.Entry<String, String>> mimeTypes) {
     this.defaultCharset = defaultCharset;
-    this.loader = new AssetLoader(resourcePath, uriPath, indexFile, overrides);
+    AssetLoader loader = new AssetLoader(resourcePathToUriPathMapping, indexFile, overrides);
     this.cache = CacheBuilder.from(spec).weigher(new AssetSizeWeigher()).build(loader);
     this.mimeTypes = new MimeTypes();
     this.setMimeTypes(mimeTypes);
@@ -102,18 +101,6 @@ public class AssetServlet extends HttpServlet {
 
   public Charset getDefaultCharset() {
     return this.defaultCharset;
-  }
-
-  public URL getResourceUrl() {
-    return Resources.getResource(loader.resourcePath);
-  }
-
-  public String getUriPath() {
-    return loader.uriPath;
-  }
-
-  public String getIndexFile() {
-    return loader.indexFilename;
   }
 
   @Override
@@ -245,19 +232,25 @@ public class AssetServlet extends HttpServlet {
   }
 
   private static class AssetLoader extends CacheLoader<String, Asset> {
-    private final String resourcePath;
-    private final String uriPath;
     private final String indexFilename;
+    private final Map<String, String> resourcePathToUriMappings = Maps.newHashMap();
     private final Iterable<Map.Entry<String, String>> overrides;
 
-    private AssetLoader(String resourcePath,
-                        String uriPath,
+    private AssetLoader(Iterable<Map.Entry<String, String>> resourcePathToUriMappings,
                         String indexFilename,
                         Iterable<Map.Entry<String, String>> overrides) {
-      final String trimmedPath = SLASHES.trimFrom(resourcePath);
-      this.resourcePath = trimmedPath.isEmpty() ? trimmedPath : trimmedPath + '/';
-      final String trimmedUri = SLASHES.trimTrailingFrom(uriPath);
-      this.uriPath = trimmedUri.isEmpty() ? "/" : trimmedUri;
+      for (Map.Entry<String, String> mapping : resourcePathToUriMappings) {
+        final String trimmedPath = SLASHES.trimFrom(mapping.getKey());
+        String resourcePath = trimmedPath.isEmpty() ? trimmedPath : trimmedPath + '/';
+        final String trimmedUri = SLASHES.trimTrailingFrom(mapping.getValue());
+        String uriPath = trimmedUri.isEmpty() ? "/" : trimmedUri;
+
+        if (this.resourcePathToUriMappings.containsKey(resourcePath)) {
+          throw new IllegalArgumentException("ResourcePathToUriMappings contains multiple mappings "
+                  + "for " + resourcePath);
+        }
+        this.resourcePathToUriMappings.put(resourcePath, uriPath);
+      }
 
       this.indexFilename = indexFilename;
       this.overrides = overrides;
@@ -265,36 +258,47 @@ public class AssetServlet extends HttpServlet {
 
     @Override
     public Asset load(String key) throws Exception {
-      Preconditions.checkArgument(key.startsWith(uriPath));
+      for (Map.Entry<String, String> mapping : resourcePathToUriMappings.entrySet()) {
+        if (!key.startsWith(mapping.getValue())) {
+          continue;
+        }
 
-      Asset asset = loadOverride(key);
-      if (asset != null) {
-        return asset;
-      }
+        Asset asset = loadOverride(key);
+        if (asset != null) {
+          return asset;
+        }
 
-      final String requestedResourcePath = SLASHES.trimFrom(key.substring(uriPath.length()));
-      final String absolutePath = SLASHES.trimFrom(resourcePath + requestedResourcePath);
+        final String requestedResourcePath =
+                SLASHES.trimFrom(key.substring(mapping.getValue().length()));
+        final String absolutePath = SLASHES.trimFrom(mapping.getKey() + requestedResourcePath);
 
-      URL requestedResourceUrl = Resources.getResource(absolutePath);
+        try {
+          URL requestedResourceUrl = Resources.getResource(absolutePath);
 
-      if (ResourceURL.isDirectory(requestedResourceUrl)) {
-        if (indexFilename != null) {
-          requestedResourceUrl = Resources.getResource(absolutePath + '/' + indexFilename);
-        } else {
-          // directory requested but no index file defined
-          return null;
+          if (ResourceURL.isDirectory(requestedResourceUrl)) {
+            if (indexFilename != null) {
+              requestedResourceUrl = Resources.getResource(absolutePath + '/' + indexFilename);
+            } else {
+              // resource mapped to directory but no index file defined
+              continue;
+            }
+          }
+
+          long lastModified = ResourceURL.getLastModified(requestedResourceUrl);
+          if (lastModified < 1) {
+            // Something went wrong trying to get the last modified time: just use the current time
+            lastModified = System.currentTimeMillis();
+          }
+
+          // zero out the millis; the If-Modified-Since header will not have them
+          lastModified = (lastModified / 1000) * 1000;
+          return new StaticAsset(Resources.toByteArray(requestedResourceUrl), lastModified);
+        } catch (IllegalArgumentException expected) {
+          // Try another Mapping.
         }
       }
 
-      long lastModified = ResourceURL.getLastModified(requestedResourceUrl);
-      if (lastModified < 1) {
-        // Something went wrong trying to get the last modified time: just use the current time
-        lastModified = System.currentTimeMillis();
-      }
-
-      // zero out the millis since the date we get back from If-Modified-Since will not have them
-      lastModified = (lastModified / 1000) * 1000;
-      return new StaticAsset(Resources.toByteArray(requestedResourceUrl), lastModified);
+      return null;
     }
 
     private Asset loadOverride(String key) throws Exception {

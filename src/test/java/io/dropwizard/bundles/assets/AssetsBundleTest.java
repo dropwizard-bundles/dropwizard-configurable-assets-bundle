@@ -22,7 +22,6 @@ public class AssetsBundleTest {
   private final ServletEnvironment servletEnvironment = mock(ServletEnvironment.class);
   private final Environment environment = mock(Environment.class);
 
-  private AssetServlet servlet;
   private String servletPath;
 
   @Before
@@ -36,15 +35,6 @@ public class AssetsBundleTest {
 
     assertThat(servletPath)
             .isEqualTo("/assets/*");
-
-    assertThat(servlet.getIndexFile())
-            .isEqualTo("index.htm");
-
-    assertThat(servlet.getResourceUrl())
-            .isEqualTo(normalize("assets"));
-
-    assertThat(servlet.getUriPath())
-            .isEqualTo("/assets");
   }
 
   @Test
@@ -53,15 +43,6 @@ public class AssetsBundleTest {
 
     assertThat(servletPath)
             .isEqualTo("/json/*");
-
-    assertThat(servlet.getIndexFile())
-            .isEqualTo("index.htm");
-
-    assertThat(servlet.getResourceUrl())
-            .isEqualTo(normalize("json"));
-
-    assertThat(servlet.getUriPath())
-            .isEqualTo("/json");
   }
 
   @Test
@@ -70,15 +51,6 @@ public class AssetsBundleTest {
 
     assertThat(servletPath)
             .isEqualTo("/what/*");
-
-    assertThat(servlet.getIndexFile())
-            .isEqualTo("index.htm");
-
-    assertThat(servlet.getResourceUrl())
-            .isEqualTo(normalize("json"));
-
-    assertThat(servlet.getUriPath())
-            .isEqualTo("/what");
   }
 
   @Test
@@ -89,28 +61,10 @@ public class AssetsBundleTest {
     assertThat(servletPath)
             .isEqualTo("/what/new/*");
 
-    assertThat(servlet.getIndexFile())
-            .isEqualTo("index.txt");
-
-    assertThat(servlet.getResourceUrl())
-            .isEqualTo(normalize("json"));
-
-    assertThat(servlet.getUriPath())
-            .isEqualTo("/what/new");
-
     runBundle(new ConfiguredAssetsBundle("/json", "/what/old", "index.txt", "customAsset2"),
             "customAsset2");
     assertThat(servletPath)
             .isEqualTo("/what/old/*");
-
-    assertThat(servlet.getIndexFile())
-            .isEqualTo("index.txt");
-
-    assertThat(servlet.getResourceUrl())
-            .isEqualTo(normalize("json"));
-
-    assertThat(servlet.getUriPath())
-            .isEqualTo("/what/old");
   }
 
   @Test
@@ -119,15 +73,6 @@ public class AssetsBundleTest {
 
     assertThat(servletPath)
             .isEqualTo("/what/*");
-
-    assertThat(servlet.getIndexFile())
-            .isEqualTo("index.txt");
-
-    assertThat(servlet.getResourceUrl())
-            .isEqualTo(normalize("json"));
-
-    assertThat(servlet.getUriPath())
-            .isEqualTo("/what");
   }
 
   private URL normalize(String path) {
@@ -157,7 +102,6 @@ public class AssetsBundleTest {
     verify(servletEnvironment).addServlet(eq(assetName), servletCaptor.capture());
     verify(registration).addMapping(pathCaptor.capture());
 
-    this.servlet = servletCaptor.getValue();
     this.servletPath = pathCaptor.getValue();
   }
 }
