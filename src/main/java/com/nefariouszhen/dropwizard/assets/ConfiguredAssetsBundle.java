@@ -13,7 +13,7 @@ import java.util.Map;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * An assets bundle (like {@link io.dropwizard.assets.AssetsBundle}) that utilizes configuration to provide the
+ * An assets bundle (like io.dropwizard.assets.AssetsBundle) that utilizes configuration to provide the
  * ability to override how assets are loaded and cached.  Specifying an override is useful during the development phase
  * to allow assets to be loaded directly out of source directories instead of the classpath and to force them to not be
  * cached by the browser or the server.  This allows developers to edit an asset, save and then immediately refresh the

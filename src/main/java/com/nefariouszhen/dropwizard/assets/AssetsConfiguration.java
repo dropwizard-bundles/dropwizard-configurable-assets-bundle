@@ -24,7 +24,10 @@ public class AssetsConfiguration {
     @JsonProperty
     private Map<String, String> mimeTypes = Maps.newHashMap();
 
-    /** The caching specification for how to memoize assets. */
+    /**
+     * The caching specification for how to memoize assets.
+     * @return The cacheSpec.
+     */
     public String getCacheSpec() {
         return cacheSpec;
     }
