@@ -1,5 +1,6 @@
 package com.nefariouszhen.dropwizard.assets;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -42,6 +43,7 @@ public class AssetServlet extends HttpServlet {
     private static final MediaType DEFAULT_MEDIA_TYPE = MediaType.HTML_UTF_8;
     private static final CharMatcher SLASHES = CharMatcher.is('/');
 
+    private final transient AssetLoader loader;
     private final transient LoadingCache<String, Asset> cache;
     private final transient MimeTypes mimeTypes;
 
@@ -71,7 +73,7 @@ public class AssetServlet extends HttpServlet {
                         Iterable<Map.Entry<String, String>> overrides,
                         Iterable<Map.Entry<String, String>> mimeTypes) {
         this.defaultCharset = defaultCharset;
-        AssetLoader loader = new AssetLoader(resourcePath, uriPath, indexFile, overrides);
+        this.loader = new AssetLoader(resourcePath, uriPath, indexFile, overrides);
         this.cache = CacheBuilder.from(spec).weigher(new AssetSizeWeigher()).build(loader);
         this.mimeTypes = new MimeTypes();
         this.setMimeTypes(mimeTypes);
@@ -93,6 +95,18 @@ public class AssetServlet extends HttpServlet {
 
     public Charset getDefaultCharset() {
         return this.defaultCharset;
+    }
+
+    public URL getResourceURL() {
+        return Resources.getResource(loader.resourcePath);
+    }
+
+    public String getUriPath() {
+        return loader.uriPath;
+    }
+
+    public String getIndexFile() {
+        return loader.indexFilename;
     }
 
     @Override
