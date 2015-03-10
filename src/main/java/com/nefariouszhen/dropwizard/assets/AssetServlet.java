@@ -1,6 +1,5 @@
 package com.nefariouszhen.dropwizard.assets;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -178,7 +177,8 @@ public class AssetServlet extends HttpServlet {
                     if (defaultCharset != null && mediaType.is(MediaType.ANY_TEXT_TYPE)) {
                         mediaType = mediaType.withCharset(defaultCharset);
                     }
-                } catch (IllegalArgumentException ignore) {}
+                } catch (IllegalArgumentException ignore) {
+                }
             }
 
             if (mediaType.is(MediaType.ANY_VIDEO_TYPE)
@@ -198,8 +198,7 @@ public class AssetServlet extends HttpServlet {
                         output.write(cachedAsset.getResource(), range.getStart(),
                                 range.getEnd() - range.getStart() + 1);
                     }
-                }
-                else {
+                } else {
                     output.write(cachedAsset.getResource());
                 }
             }
@@ -216,7 +215,7 @@ public class AssetServlet extends HttpServlet {
     /**
      * Parses a given Range header for one or more byte ranges.
      *
-     * @param rangeHeader Range header to parse
+     * @param rangeHeader    Range header to parse
      * @param resourceLength Length of the resource in bytes
      * @return List of parsed ranges
      */
@@ -316,11 +315,15 @@ public class AssetServlet extends HttpServlet {
 
     private static interface Asset {
         byte[] getResource();
+
         String getETag();
+
         long getLastModifiedTime();
     }
 
-    /** Weigh an asset according to the number of bytes it contains. */
+    /**
+     * Weigh an asset according to the number of bytes it contains.
+     */
     private static final class AssetSizeWeigher implements Weigher<String, Asset> {
         @Override
         public int weigh(String key, Asset asset) {
