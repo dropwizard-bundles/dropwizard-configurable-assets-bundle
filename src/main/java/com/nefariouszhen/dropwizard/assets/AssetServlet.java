@@ -63,6 +63,9 @@ public class AssetServlet extends HttpServlet {
      * @param indexFile      the filename to use when directories are requested, or null to serve no
      *                       indexes
      * @param defaultCharset the default character set
+     * @param spec           the CacheBuilderSpec to use
+     * @param overrides      the path overrides
+     * @param mimeTypes      the mimeType overrides
      */
     public AssetServlet(String resourcePath,
                         String uriPath,
