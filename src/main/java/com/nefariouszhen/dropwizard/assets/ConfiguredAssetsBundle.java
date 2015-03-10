@@ -1,5 +1,6 @@
 package com.nefariouszhen.dropwizard.assets;
 
+import com.google.common.base.Charsets;
 import com.google.common.cache.CacheBuilderSpec;
 import io.dropwizard.ConfiguredBundle;
 import io.dropwizard.setup.Bootstrap;
@@ -143,7 +144,7 @@ public class ConfiguredAssetsBundle implements ConfiguredBundle<AssetsBundleConf
         Iterable<Map.Entry<String, String>> overrides = config.getOverrides();
         Iterable<Map.Entry<String, String>> mimeTypes = config.getMimeTypes();
 
-        AssetServlet servlet = new AssetServlet(resourcePath, spec, uriPath, indexFile, overrides, mimeTypes);
+        AssetServlet servlet = new AssetServlet(resourcePath, uriPath, indexFile, Charsets.UTF_8, spec, overrides, mimeTypes);
         env.servlets().addServlet(assetsName, servlet).addMapping(uriPath + "*");
     }
 

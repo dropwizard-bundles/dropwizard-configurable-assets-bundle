@@ -1,18 +1,21 @@
 package com.nefariouszhen.dropwizard.assets;
 
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheBuilderSpec;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.cache.Weigher;
+import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 import com.google.common.net.HttpHeaders;
 import com.google.common.net.MediaType;
+import io.dropwizard.servlets.assets.ByteRange;
 import io.dropwizard.servlets.assets.ResourceURL;
 import org.eclipse.jetty.http.MimeTypes;
 
@@ -25,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -33,50 +37,44 @@ import java.util.Map;
  *
  * @see io.dropwizard.servlets.assets.AssetServlet
  */
-class AssetServlet extends HttpServlet {
+public class AssetServlet extends HttpServlet {
     private static final long serialVersionUID = 6393345594784987908L;
     private static final MediaType DEFAULT_MEDIA_TYPE = MediaType.HTML_UTF_8;
-    private static final String DEFAULT_INDEX_FILE = "index.htm";
+    private static final CharMatcher SLASHES = CharMatcher.is('/');
 
     private final transient LoadingCache<String, Asset> cache;
     private final transient MimeTypes mimeTypes;
 
-    private Charset defaultCharset = Charsets.UTF_8;
+    private Charset defaultCharset;
 
     /**
-     * Creates a new {@code AssetServlet} that serves static assets loaded from {@code resourceURL} (typically a file:
-     * or jar: URL). The assets are served at URIs rooted at {@code uriPath}. For example, given a {@code resourceURL}
-     * of {@code "file:/data/assets"} and a {@code uriPath} of {@code "/js"}, an {@code AssetServlet} would serve the
-     * contents of {@code /data/assets/example.js} in response to a request for {@code /js/example.js}. If a directory
-     * is requested and {@code indexFile} is defined, then {@code AssetServlet} will attempt to serve a file with that
-     * name in that directory. If a directory is requested and {@code indexFile} is null, it will serve a 404.
+     * Creates a new {@code AssetServlet} that serves static assets loaded from {@code resourceURL}
+     * (typically a file: or jar: URL). The assets are served at URIs rooted at {@code uriPath}. For
+     * example, given a {@code resourceURL} of {@code "file:/data/assets"} and a {@code uriPath} of
+     * {@code "/js"}, an {@code AssetServlet} would serve the contents of {@code
+     * /data/assets/example.js} in response to a request for {@code /js/example.js}. If a directory
+     * is requested and {@code indexFile} is defined, then {@code AssetServlet} will attempt to
+     * serve a file with that name in that directory. If a directory is requested and {@code
+     * indexFile} is null, it will serve a 404.
      *
-     * @param resourcePath the base URL from which assets are loaded
-     * @param spec         specification for the underlying cache
-     * @param uriPath      the URI path fragment in which all requests are rooted
-     * @param indexFile    the filename to use when directories are requested, or null to serve no indexes
-     * @param overrides    the path overrides
-     * @see CacheBuilderSpec
+     * @param resourcePath   the base URL from which assets are loaded
+     * @param uriPath        the URI path fragment in which all requests are rooted
+     * @param indexFile      the filename to use when directories are requested, or null to serve no
+     *                       indexes
+     * @param defaultCharset the default character set
      */
-    public AssetServlet(String resourcePath, CacheBuilderSpec spec, String uriPath, String indexFile,
-                        Iterable<Map.Entry<String, String>> overrides, Iterable<Map.Entry<String, String>> mimeTypes) {
+    public AssetServlet(String resourcePath,
+                        String uriPath,
+                        String indexFile,
+                        Charset defaultCharset,
+                        CacheBuilderSpec spec,
+                        Iterable<Map.Entry<String, String>> overrides,
+                        Iterable<Map.Entry<String, String>> mimeTypes) {
+        this.defaultCharset = defaultCharset;
         AssetLoader loader = new AssetLoader(resourcePath, uriPath, indexFile, overrides);
         this.cache = CacheBuilder.from(spec).weigher(new AssetSizeWeigher()).build(loader);
         this.mimeTypes = new MimeTypes();
         this.setMimeTypes(mimeTypes);
-    }
-
-    /**
-     * Creates a new {@code AssetServlet}. This is provided for backwards-compatibility; see
-     * {@link AssetServlet(URL, CacheBuilderSpec, String, String)} for details.
-     *
-     * @param resourcePath the base URL from which assets are loaded
-     * @param spec         specification for the underlying cache
-     * @param uriPath      the URI path fragment in which all requests are rooted
-     */
-    public AssetServlet(String resourcePath, CacheBuilderSpec spec, String uriPath,
-                        Iterable<Map.Entry<String, String>> overrides, Iterable<Map.Entry<String, String>> mimes) {
-        this(resourcePath, spec, uriPath, DEFAULT_INDEX_FILE, overrides, mimes);
     }
 
     public void setMimeTypes(Iterable<Map.Entry<String, String>> mimeTypes) {
@@ -84,7 +82,7 @@ class AssetServlet extends HttpServlet {
             this.mimeTypes.addMimeMapping(mime.getKey(), mime.getValue());
         }
     }
-    
+
     public MimeTypes getMimeTypes() {
         return mimeTypes;
     }
@@ -104,54 +102,123 @@ class AssetServlet extends HttpServlet {
             if (req.getPathInfo() != null) {
                 builder.append(req.getPathInfo());
             }
-            Asset asset = cache.getUnchecked(builder.toString());
-            if (asset == null) {
+            final Asset cachedAsset = cache.getUnchecked(builder.toString());
+            if (cachedAsset == null) {
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND);
                 return;
             }
 
-            // Check the etag...
-            if (asset.getETag().equals(req.getHeader(HttpHeaders.IF_NONE_MATCH))) {
+            if (isCachedClientSide(req, cachedAsset)) {
                 resp.sendError(HttpServletResponse.SC_NOT_MODIFIED);
                 return;
             }
 
-            // Check the last modified time...
-            if (asset.getLastModifiedTime() <= req.getDateHeader(HttpHeaders.IF_MODIFIED_SINCE)) {
-                resp.sendError(HttpServletResponse.SC_NOT_MODIFIED);
-                return;
+            final String rangeHeader = req.getHeader(HttpHeaders.RANGE);
+
+            final int resourceLength = cachedAsset.getResource().length;
+            ImmutableList<ByteRange> ranges = ImmutableList.of();
+
+            boolean usingRanges = false;
+            // Support for HTTP Byte Ranges
+            // http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
+            if (rangeHeader != null) {
+
+                final String ifRange = req.getHeader(HttpHeaders.IF_RANGE);
+
+                if (ifRange == null || cachedAsset.getETag().equals(ifRange)) {
+
+                    try {
+                        ranges = parseRangeHeader(rangeHeader, resourceLength);
+                    } catch (NumberFormatException e) {
+                        resp.sendError(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
+                        return;
+                    }
+
+                    if (ranges.isEmpty()) {
+                        resp.sendError(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
+                        return;
+                    }
+
+                    resp.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT);
+                    usingRanges = true;
+
+                    resp.addHeader(HttpHeaders.CONTENT_RANGE, "bytes "
+                            + Joiner.on(",").join(ranges) + "/" + resourceLength);
+                }
             }
 
-            resp.setDateHeader(HttpHeaders.LAST_MODIFIED, asset.getLastModifiedTime());
-            resp.setHeader(HttpHeaders.ETAG, asset.getETag());
+            resp.setDateHeader(HttpHeaders.LAST_MODIFIED, cachedAsset.getLastModifiedTime());
+            resp.setHeader(HttpHeaders.ETAG, cachedAsset.getETag());
+
+
+            String mimeTypeOfExtension = mimeTypes.getMimeByExtension(req.getRequestURI());
+            if (mimeTypeOfExtension == null) {
+                mimeTypeOfExtension = req.getServletContext().getMimeType(req.getRequestURI());
+            }
 
             MediaType mediaType = DEFAULT_MEDIA_TYPE;
-            String mimeType = mimeTypes.getMimeByExtension(req.getRequestURI());
 
-            if (mimeType != null) {
+            if (mimeTypeOfExtension != null) {
                 try {
-                    mediaType = MediaType.parse(mimeType);
+                    mediaType = MediaType.parse(mimeTypeOfExtension);
                     if (defaultCharset != null && mediaType.is(MediaType.ANY_TEXT_TYPE)) {
                         mediaType = mediaType.withCharset(defaultCharset);
                     }
                 } catch (IllegalArgumentException ignore) {}
             }
 
-            resp.setContentType(mediaType.type() + "/" + mediaType.subtype());
+            if (mediaType.is(MediaType.ANY_VIDEO_TYPE)
+                    || mediaType.is(MediaType.ANY_AUDIO_TYPE) || usingRanges) {
+                resp.addHeader(HttpHeaders.ACCEPT_RANGES, "bytes");
+            }
+
+            resp.setContentType(mediaType.type() + '/' + mediaType.subtype());
 
             if (mediaType.charset().isPresent()) {
                 resp.setCharacterEncoding(mediaType.charset().get().toString());
             }
 
-            final ServletOutputStream output = resp.getOutputStream();
-            try {
-                output.write(asset.getResource());
-            } finally {
-                output.close();
+            try (ServletOutputStream output = resp.getOutputStream()) {
+                if (usingRanges) {
+                    for (final ByteRange range : ranges) {
+                        output.write(cachedAsset.getResource(), range.getStart(),
+                                range.getEnd() - range.getStart() + 1);
+                    }
+                }
+                else {
+                    output.write(cachedAsset.getResource());
+                }
             }
         } catch (RuntimeException ignored) {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
+    }
+
+    private boolean isCachedClientSide(HttpServletRequest req, Asset cachedAsset) {
+        return cachedAsset.getETag().equals(req.getHeader(HttpHeaders.IF_NONE_MATCH)) ||
+                (req.getDateHeader(HttpHeaders.IF_MODIFIED_SINCE) >= cachedAsset.getLastModifiedTime());
+    }
+
+    /**
+     * Parses a given Range header for one or more byte ranges.
+     *
+     * @param rangeHeader Range header to parse
+     * @param resourceLength Length of the resource in bytes
+     * @return List of parsed ranges
+     */
+    private ImmutableList<ByteRange> parseRangeHeader(final String rangeHeader,
+                                                      final int resourceLength) {
+        final ImmutableList.Builder<ByteRange> builder = ImmutableList.builder();
+        if (rangeHeader.contains("=")) {
+            final String[] parts = rangeHeader.split("=");
+            if (parts.length > 1) {
+                final List<String> ranges = Splitter.on(",").trimResults().splitToList(parts[1]);
+                for (final String range : ranges) {
+                    builder.add(ByteRange.parse(range, resourceLength));
+                }
+            }
+        }
+        return builder.build();
     }
 
     private static class AssetLoader extends CacheLoader<String, Asset> {
@@ -161,10 +228,11 @@ class AssetServlet extends HttpServlet {
         private final Iterable<Map.Entry<String, String>> overrides;
 
         private AssetLoader(String resourcePath, String uriPath, String indexFilename, Iterable<Map.Entry<String, String>> overrides) {
-            final String trimmedPath = CharMatcher.is('/').trimFrom(resourcePath);
-            this.resourcePath = trimmedPath.isEmpty() ? trimmedPath : trimmedPath + "/";
-            final String trimmedUri = CharMatcher.is('/').trimTrailingFrom(uriPath);
-            this.uriPath = trimmedUri.length() == 0 ? "/" : trimmedUri;
+            final String trimmedPath = SLASHES.trimFrom(resourcePath);
+            this.resourcePath = trimmedPath.isEmpty() ? trimmedPath : trimmedPath + '/';
+            final String trimmedUri = SLASHES.trimTrailingFrom(uriPath);
+            this.uriPath = trimmedUri.isEmpty() ? "/" : trimmedUri;
+
             this.indexFilename = indexFilename;
             this.overrides = overrides;
         }
@@ -178,9 +246,8 @@ class AssetServlet extends HttpServlet {
                 return asset;
             }
 
-            final String requestedResourcePath = CharMatcher.is('/').trimFrom(key.substring(uriPath.length()));
-            final String absoluteRequestedResourcePath = CharMatcher.is('/').trimFrom(
-                    this.resourcePath + requestedResourcePath);
+            final String requestedResourcePath = SLASHES.trimFrom(key.substring(uriPath.length()));
+            final String absoluteRequestedResourcePath = SLASHES.trimFrom(this.resourcePath + requestedResourcePath);
 
             URL requestedResourceURL = Resources.getResource(absoluteRequestedResourcePath);
 
