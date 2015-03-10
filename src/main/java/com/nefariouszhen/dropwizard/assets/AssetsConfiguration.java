@@ -8,9 +8,13 @@ import javax.validation.constraints.NotNull;
 import java.util.Map;
 
 public class AssetsConfiguration {
-    @NotNull
+    /**
+     * Initialize cacheSpec to null so that whatever may be specified by code is able to be overridden by configuration.
+     * If null the default cache spec of "maximumSize=100" will be used.
+     * @see com.nefariouszhen.dropwizard.assets.ConfiguredAssetsBundle#DEFAULT_CACHE_SPEC
+     */
     @JsonProperty
-    private String cacheSpec = ConfiguredAssetsBundle.DEFAULT_CACHE_SPEC.toParsableString();
+    private String cacheSpec = null;
 
     @NotNull
     @JsonProperty
