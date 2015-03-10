@@ -4,6 +4,9 @@ import com.google.common.base.Charsets;
 import com.google.common.cache.CacheBuilderSpec;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.net.HttpHeaders;
+import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpTester;
 import org.eclipse.jetty.http.HttpVersion;
@@ -13,17 +16,16 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.nio.charset.Charset;
-import java.util.HashMap;
-import java.util.Map;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class AssetServletTest {
   private static final Charset DEFAULT_CHARSET = Charsets.UTF_8;
-  private static final CacheBuilderSpec DEFAULT_CACHE_SPEC = CacheBuilderSpec.parse("maximumSize=100");
-  private static final Iterable<Map.Entry<String, String>> EMPTY_OVERRIDES = ImmutableMap.<String, String>builder().build().entrySet();
-  private static final Iterable<Map.Entry<String, String>> EMPTY_MIMETYPES = ImmutableMap.<String, String>builder().build().entrySet();
+  private static final CacheBuilderSpec DEFAULT_CACHE_SPEC =
+          CacheBuilderSpec.parse("maximumSize=100");
+  private static final Iterable<Map.Entry<String, String>> EMPTY_OVERRIDES =
+          ImmutableMap.<String, String>builder().build().entrySet();
+  private static final Iterable<Map.Entry<String, String>> EMPTY_MIMETYPES =
+          ImmutableMap.<String, String>builder().build().entrySet();
   private static final String DUMMY_SERVLET = "/dummy_servlet/";
   private static final String NOINDEX_SERVLET = "/noindex_servlet/";
   private static final String NOCHARSET_SERVLET = "/nocharset_servlet/";
@@ -37,7 +39,8 @@ public class AssetServletTest {
     private static final long serialVersionUID = -1L;
 
     public DummyAssetServlet() {
-      super(RESOURCE_PATH, DUMMY_SERVLET, "index.htm", DEFAULT_CHARSET, DEFAULT_CACHE_SPEC, EMPTY_OVERRIDES, EMPTY_MIMETYPES);
+      super(RESOURCE_PATH, DUMMY_SERVLET, "index.htm", DEFAULT_CHARSET, DEFAULT_CACHE_SPEC,
+              EMPTY_OVERRIDES, EMPTY_MIMETYPES);
     }
   }
 
@@ -45,7 +48,8 @@ public class AssetServletTest {
     private static final long serialVersionUID = -1L;
 
     public NoIndexAssetServlet() {
-      super(RESOURCE_PATH, DUMMY_SERVLET, null, DEFAULT_CHARSET, DEFAULT_CACHE_SPEC, EMPTY_OVERRIDES, EMPTY_MIMETYPES);
+      super(RESOURCE_PATH, DUMMY_SERVLET, null, DEFAULT_CHARSET, DEFAULT_CACHE_SPEC,
+              EMPTY_OVERRIDES, EMPTY_MIMETYPES);
     }
   }
 
@@ -53,7 +57,8 @@ public class AssetServletTest {
     private static final long serialVersionUID = 1L;
 
     public RootAssetServlet() {
-      super("/", ROOT_SERVLET, null, DEFAULT_CHARSET, DEFAULT_CACHE_SPEC, EMPTY_OVERRIDES, EMPTY_MIMETYPES);
+      super("/", ROOT_SERVLET, null, DEFAULT_CHARSET, DEFAULT_CACHE_SPEC, EMPTY_OVERRIDES,
+              EMPTY_MIMETYPES);
     }
   }
 
@@ -61,14 +66,16 @@ public class AssetServletTest {
     private static final long serialVersionUID = 1L;
 
     public NoCharsetAssetServlet() {
-      super(RESOURCE_PATH, NOCHARSET_SERVLET, null, DEFAULT_CHARSET, DEFAULT_CACHE_SPEC, EMPTY_OVERRIDES, EMPTY_MIMETYPES);
+      super(RESOURCE_PATH, NOCHARSET_SERVLET, null, DEFAULT_CHARSET, DEFAULT_CACHE_SPEC,
+              EMPTY_OVERRIDES, EMPTY_MIMETYPES);
       setDefaultCharset(null);
     }
   }
 
   public static class MimeMappingsServlet extends AssetServlet {
     public MimeMappingsServlet() {
-      super(RESOURCE_PATH, MIME_SERVLET, null, DEFAULT_CHARSET, DEFAULT_CACHE_SPEC, EMPTY_OVERRIDES, EMPTY_MIMETYPES);
+      super(RESOURCE_PATH, MIME_SERVLET, null, DEFAULT_CHARSET, DEFAULT_CACHE_SPEC,
+              EMPTY_OVERRIDES, EMPTY_MIMETYPES);
       setDefaultCharset(null);
       Map<String, String> mimeMappings = new HashMap<String, String>();
       mimeMappings.put("bar", "application/bar");

@@ -4,12 +4,11 @@ import com.google.common.io.Resources;
 import io.dropwizard.jetty.setup.ServletEnvironment;
 import io.dropwizard.servlets.assets.ResourceURL;
 import io.dropwizard.setup.Environment;
+import java.net.URL;
+import javax.servlet.ServletRegistration;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-
-import javax.servlet.ServletRegistration;
-import java.net.URL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
@@ -84,7 +83,8 @@ public class AssetsBundleTest {
 
   @Test
   public void canSupportDifferentAssetsBundleName() throws Exception {
-    runBundle(new ConfiguredAssetsBundle("/json", "/what/new", "index.txt", "customAsset1"), "customAsset1");
+    runBundle(new ConfiguredAssetsBundle("/json", "/what/new", "index.txt", "customAsset1"),
+            "customAsset1");
 
     assertThat(servletPath)
             .isEqualTo("/what/new/*");
@@ -98,7 +98,8 @@ public class AssetsBundleTest {
     assertThat(servlet.getUriPath())
             .isEqualTo("/what/new");
 
-    runBundle(new ConfiguredAssetsBundle("/json", "/what/old", "index.txt", "customAsset2"), "customAsset2");
+    runBundle(new ConfiguredAssetsBundle("/json", "/what/old", "index.txt", "customAsset2"),
+            "customAsset2");
     assertThat(servletPath)
             .isEqualTo("/what/old/*");
 
@@ -139,7 +140,8 @@ public class AssetsBundleTest {
 
   private void runBundle(ConfiguredAssetsBundle bundle, String assetName) throws Exception {
     final ServletRegistration.Dynamic registration = mock(ServletRegistration.Dynamic.class);
-    when(servletEnvironment.addServlet(anyString(), any(AssetServlet.class))).thenReturn(registration);
+    when(servletEnvironment.addServlet(anyString(), any(AssetServlet.class)))
+            .thenReturn(registration);
     AssetsBundleConfiguration defaultConfiguration = new AssetsBundleConfiguration() {
       @Override
       public AssetsConfiguration getAssetsConfiguration() {
