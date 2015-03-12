@@ -1,10 +1,12 @@
 package io.dropwizard.bundles.assets;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import io.dropwizard.jetty.setup.ServletEnvironment;
 import io.dropwizard.servlets.assets.ResourceURL;
 import io.dropwizard.setup.Environment;
 import java.net.URL;
+import java.util.List;
 import javax.servlet.ServletRegistration;
 import org.junit.Before;
 import org.junit.Test;
@@ -13,6 +15,7 @@ import org.mockito.ArgumentCaptor;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -23,6 +26,7 @@ public class AssetsBundleTest {
   private final Environment environment = mock(Environment.class);
 
   private String servletPath;
+  private List<String> servletPaths;
 
   @Before
   public void setUp() throws Exception {
@@ -75,8 +79,17 @@ public class AssetsBundleTest {
             .isEqualTo("/what/*");
   }
 
-  private URL normalize(String path) {
-    return ResourceURL.appendTrailingSlash(Resources.getResource(path));
+  @Test
+  public void canHaveMultipleMappings() throws Exception {
+    runBundle(new ConfiguredAssetsBundle(ImmutableMap.<String, String>builder()
+            .put("/risk", "/riskPath")
+            .put("/catan", "/catanPath")
+            .build()
+    ));
+
+    assertThat(servletPaths.size()).isEqualTo(2);
+    assertThat(servletPaths).contains("/riskPath/*");
+    assertThat(servletPaths).contains("/catanPath/*");
   }
 
   private void runBundle(ConfiguredAssetsBundle bundle) throws Exception {
@@ -99,9 +112,18 @@ public class AssetsBundleTest {
     final ArgumentCaptor<AssetServlet> servletCaptor = ArgumentCaptor.forClass(AssetServlet.class);
     final ArgumentCaptor<String> pathCaptor = ArgumentCaptor.forClass(String.class);
 
-    verify(servletEnvironment).addServlet(eq(assetName), servletCaptor.capture());
-    verify(registration).addMapping(pathCaptor.capture());
+    verify(servletEnvironment, atLeastOnce()).addServlet(eq(assetName), servletCaptor.capture());
+    verify(registration, atLeastOnce()).addMapping(pathCaptor.capture());
 
     this.servletPath = pathCaptor.getValue();
+    this.servletPaths = pathCaptor.getAllValues();
+
+    // If more than one servlet was captured, let's verify they're the same instance.
+    List<AssetServlet> capturedServlets = servletCaptor.getAllValues();
+    if (capturedServlets.size() > 1) {
+      for (AssetServlet servlet : capturedServlets) {
+        assertThat(servlet == capturedServlets.get(0));
+      }
+    }
   }
 }
