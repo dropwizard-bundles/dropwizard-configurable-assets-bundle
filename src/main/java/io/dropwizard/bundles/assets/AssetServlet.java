@@ -42,6 +42,7 @@ public class AssetServlet extends HttpServlet {
   private static final MediaType DEFAULT_MEDIA_TYPE = MediaType.HTML_UTF_8;
   private static final CharMatcher SLASHES = CharMatcher.is('/');
 
+  private final transient CacheBuilderSpec cacheSpec;
   private final transient LoadingCache<String, Asset> cache;
   private final transient MimeTypes mimeTypes;
 
@@ -76,6 +77,7 @@ public class AssetServlet extends HttpServlet {
     this.defaultCharset = defaultCharset;
     AssetLoader loader = new AssetLoader(resourcePathToUriPathMapping, indexFile, overrides);
     this.cache = CacheBuilder.from(spec).weigher(new AssetSizeWeigher()).build(loader);
+    this.cacheSpec = spec;
     this.mimeTypes = new MimeTypes();
     this.setMimeTypes(mimeTypes);
   }
@@ -101,6 +103,10 @@ public class AssetServlet extends HttpServlet {
 
   public Charset getDefaultCharset() {
     return this.defaultCharset;
+  }
+
+  public CacheBuilderSpec getCacheSpec() {
+    return cacheSpec;
   }
 
   @Override

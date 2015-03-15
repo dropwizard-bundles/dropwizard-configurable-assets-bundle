@@ -1,5 +1,6 @@
 package io.dropwizard.bundles.assets;
 
+import com.google.common.cache.CacheBuilderSpec;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import io.dropwizard.jetty.setup.ServletEnvironment;
@@ -25,8 +26,16 @@ public class AssetsBundleTest {
   private final ServletEnvironment servletEnvironment = mock(ServletEnvironment.class);
   private final Environment environment = mock(Environment.class);
 
+  private final AssetsBundleConfiguration defaultConfiguration = new AssetsBundleConfiguration() {
+    @Override
+    public AssetsConfiguration getAssetsConfiguration() {
+      return new AssetsConfiguration();
+    }
+  };
+
   private String servletPath;
   private List<String> servletPaths;
+  private AssetServlet servlet;
 
   @Before
   public void setUp() throws Exception {
@@ -60,13 +69,13 @@ public class AssetsBundleTest {
   @Test
   public void canSupportDifferentAssetsBundleName() throws Exception {
     runBundle(new ConfiguredAssetsBundle("/json", "/what/new", "index.txt", "customAsset1"),
-            "customAsset1");
+            "customAsset1", defaultConfiguration);
 
     assertThat(servletPath)
             .isEqualTo("/what/new/*");
 
     runBundle(new ConfiguredAssetsBundle("/json", "/what/old", "index.txt", "customAsset2"),
-            "customAsset2");
+            "customAsset2", defaultConfiguration);
     assertThat(servletPath)
             .isEqualTo("/what/old/*");
   }
@@ -92,22 +101,43 @@ public class AssetsBundleTest {
     assertThat(servletPaths).contains("/catanPath/*");
   }
 
-  private void runBundle(ConfiguredAssetsBundle bundle) throws Exception {
-    runBundle(bundle, "assets");
+  @Test
+  public void usesDefaultCacheSpec() throws Exception {
+    runBundle(new ConfiguredAssetsBundle());
+    assertThat(servlet.getCacheSpec()).isEqualTo(ConfiguredAssetsBundle.DEFAULT_CACHE_SPEC);
   }
 
-  private void runBundle(ConfiguredAssetsBundle bundle, String assetName) throws Exception {
-    final ServletRegistration.Dynamic registration = mock(ServletRegistration.Dynamic.class);
-    when(servletEnvironment.addServlet(anyString(), any(AssetServlet.class)))
-            .thenReturn(registration);
-    AssetsBundleConfiguration defaultConfiguration = new AssetsBundleConfiguration() {
+  @Test
+  public void canOverrideCacheSpec() throws Exception {
+    final String cacheSpec = "expireAfterAccess=20m";
+
+    AssetsBundleConfiguration config = new AssetsBundleConfiguration() {
       @Override
       public AssetsConfiguration getAssetsConfiguration() {
-        return new AssetsConfiguration();
+        return new AssetsConfiguration() {
+          @Override
+          public String getCacheSpec() {
+            return cacheSpec;
+          }
+        };
       }
     };
 
-    bundle.run(defaultConfiguration, environment);
+    runBundle(new ConfiguredAssetsBundle(), "assets", config);
+    assertThat(servlet.getCacheSpec()).isEqualTo(CacheBuilderSpec.parse(cacheSpec));
+  }
+
+  private void runBundle(ConfiguredAssetsBundle bundle) throws Exception {
+    runBundle(bundle, "assets", defaultConfiguration);
+  }
+
+  private void runBundle(ConfiguredAssetsBundle bundle, String assetName,
+                         AssetsBundleConfiguration config) throws Exception {
+    final ServletRegistration.Dynamic registration = mock(ServletRegistration.Dynamic.class);
+    when(servletEnvironment.addServlet(anyString(), any(AssetServlet.class)))
+            .thenReturn(registration);
+
+    bundle.run(config, environment);
 
     final ArgumentCaptor<AssetServlet> servletCaptor = ArgumentCaptor.forClass(AssetServlet.class);
     final ArgumentCaptor<String> pathCaptor = ArgumentCaptor.forClass(String.class);
@@ -125,5 +155,7 @@ public class AssetsBundleTest {
         assertThat(servlet == capturedServlets.get(0));
       }
     }
+
+    this.servlet = capturedServlets.get(0);
   }
 }

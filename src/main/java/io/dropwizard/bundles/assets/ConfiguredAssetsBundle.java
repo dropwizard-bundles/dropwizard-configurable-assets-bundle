@@ -25,7 +25,7 @@ public class ConfiguredAssetsBundle implements ConfiguredBundle<AssetsBundleConf
   private static final Logger LOGGER = LoggerFactory.getLogger(ConfiguredAssetsBundle.class);
 
   private static final String DEFAULT_PATH = "/assets";
-  protected static final CacheBuilderSpec DEFAULT_CACHE_SPEC =
+  public static final CacheBuilderSpec DEFAULT_CACHE_SPEC =
           CacheBuilderSpec.parse("maximumSize=100");
   private static final String DEFAULT_INDEX_FILE = "index.htm";
   private static final String DEFAULT_SERVLET_MAPPING_NAME = "assets";
