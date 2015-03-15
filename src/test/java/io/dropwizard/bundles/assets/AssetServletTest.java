@@ -87,8 +87,9 @@ public class AssetServletTest {
     public MimeMappingsServlet() {
       super(resourceMapping(RESOURCE_PATH, MIME_SERVLET), null, DEFAULT_CHARSET, DEFAULT_CACHE_SPEC,
               EMPTY_OVERRIDES, EMPTY_MIMETYPES);
-      Map<String, String> mimeMappings = new HashMap<String, String>();
+      Map<String, String> mimeMappings = new HashMap<>();
       mimeMappings.put("bar", "application/bar");
+      mimeMappings.put("txt", "application/foo");
       setMimeTypes(mimeMappings.entrySet());
     }
   }
@@ -477,6 +478,15 @@ public class AssetServletTest {
             .isEqualTo(200);
     assertThat(response.getStringField(HttpHeader.CONTENT_TYPE))
             .isEqualTo("application/bar");
+  }
+
+  @Test
+  public void overrideMimeMapping() throws Exception {
+    response = makeRequest(MIME_SERVLET + "example.txt");
+    assertThat(response.getStatus())
+            .isEqualTo(200);
+    assertThat(response.getStringField(HttpHeader.CONTENT_TYPE))
+            .isEqualTo("application/foo");
   }
 
   @Test
