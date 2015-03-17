@@ -2,6 +2,8 @@ package io.dropwizard.bundles.assets;
 
 import com.google.common.base.Charsets;
 import com.google.common.cache.CacheBuilderSpec;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import io.dropwizard.ConfiguredBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
@@ -28,9 +30,8 @@ public class ConfiguredAssetsBundle implements ConfiguredBundle<AssetsBundleConf
   private static final String DEFAULT_INDEX_FILE = "index.htm";
   private static final String DEFAULT_SERVLET_MAPPING_NAME = "assets";
 
-  private final String resourcePath;
+  private final Iterable<Map.Entry<String, String>> resourcePathToUriMappings;
   private final CacheBuilderSpec cacheBuilderSpec;
-  private final String uriPath;
   private final String indexFile;
   private final String assetsName;
 
@@ -112,8 +113,7 @@ public class ConfiguredAssetsBundle implements ConfiguredBundle<AssetsBundleConf
    * {@code src/main/resources/assets/*} as {@code /assets/*}.
    *
    * @param cacheBuilderSpec the spec for the cache builder
-   * @see ConfiguredAssetsBundle#ConfiguredAssetsBundle(String, String, String, String,
-   * CacheBuilderSpec)
+   * @see ConfiguredAssetsBundle#ConfiguredAssetsBundle(Map, String, String, CacheBuilderSpec)
    */
   public ConfiguredAssetsBundle(CacheBuilderSpec cacheBuilderSpec) {
     this(DEFAULT_PATH, DEFAULT_PATH, DEFAULT_INDEX_FILE, DEFAULT_SERVLET_MAPPING_NAME,
@@ -143,8 +143,7 @@ public class ConfiguredAssetsBundle implements ConfiguredBundle<AssetsBundleConf
    * @param resourcePath     the resource path (in the classpath) of the static asset files
    * @param uriPath          the uri path for the static asset files
    * @param cacheBuilderSpec the spec for the cache builder
-   * @see ConfiguredAssetsBundle#ConfiguredAssetsBundle(String, String, String, String,
-   * CacheBuilderSpec)
+   * @see ConfiguredAssetsBundle#ConfiguredAssetsBundle(Map, String, String, CacheBuilderSpec)
    */
   public ConfiguredAssetsBundle(String resourcePath, String uriPath,
                                 CacheBuilderSpec cacheBuilderSpec) {
@@ -162,8 +161,7 @@ public class ConfiguredAssetsBundle implements ConfiguredBundle<AssetsBundleConf
    * @param uriPath          the uri path for the static asset files
    * @param indexFile        the name of the index file to use
    * @param cacheBuilderSpec the spec for the cache builder
-   * @see ConfiguredAssetsBundle#ConfiguredAssetsBundle(String, String, String, String,
-   * CacheBuilderSpec)
+   * @see ConfiguredAssetsBundle#ConfiguredAssetsBundle(Map, String, String, CacheBuilderSpec)
    */
   public ConfiguredAssetsBundle(String resourcePath, String uriPath, String indexFile,
                                 CacheBuilderSpec cacheBuilderSpec) {
@@ -184,11 +182,116 @@ public class ConfiguredAssetsBundle implements ConfiguredBundle<AssetsBundleConf
    */
   public ConfiguredAssetsBundle(String resourcePath, String uriPath, String indexFile,
                                 String assetsName, CacheBuilderSpec cacheBuilderSpec) {
-    checkArgument(resourcePath.startsWith("/"), "%s is not an absolute path", resourcePath);
-    checkArgument(!"/".equals(resourcePath), "%s is the classpath root", resourcePath);
-    this.resourcePath = resourcePath.endsWith("/") ? resourcePath : (resourcePath + '/');
+    this(ImmutableMap.<String, String>builder().put(resourcePath, uriPath).build(), indexFile,
+            assetsName, cacheBuilderSpec);
+  }
+
+  /**
+   * Creates a new {@link ConfiguredAssetsBundle} which will configure the service to serve the
+   * static files located in {@code src/main/resources/${resourcePath}} as {@code /${uriPath}}. For
+   * example, given a {@code resourcePath} of {@code "/assets"} and a uriPath of {@code "/js"},
+   * {@code src/main/resources/assets/example.js} would be served up from {@code /js/example.js}.
+   *
+   * @param resourcePathToUriMappings a series of mappings from resource paths (in the classpath)
+   *                                  to the uri path that hosts the resource
+   * @see ConfiguredAssetsBundle#ConfiguredAssetsBundle(String, String, String, String,
+   * CacheBuilderSpec)
+   */
+  public ConfiguredAssetsBundle(Map<String, String> resourcePathToUriMappings) {
+    this(resourcePathToUriMappings, DEFAULT_INDEX_FILE, DEFAULT_SERVLET_MAPPING_NAME,
+            DEFAULT_CACHE_SPEC);
+  }
+
+  /**
+   * Creates a new AssetsBundle which will configure the service to serve the static files
+   * located in {@code src/main/resources/${resourcePath}} as {@code /${uriPath}}. If no file name
+   * is in ${uriPath}, ${indexFile} is appended before serving. For example, given a
+   * {@code resourcePath} of {@code "/assets"} and a uriPath of {@code "/js"},
+   * {@code src/main/resources/assets/example.js} would be served up from {@code /js/example.js}.
+   *
+   * @param resourcePathToUriMappings a series of mappings from resource paths (in the classpath)
+   *                                  to the uri path that hosts the resource
+   * @param indexFile                 the name of the index file to use
+   */
+  public ConfiguredAssetsBundle(Map<String, String> resourcePathToUriMappings, String indexFile) {
+    this(resourcePathToUriMappings, indexFile, DEFAULT_SERVLET_MAPPING_NAME, DEFAULT_CACHE_SPEC);
+  }
+
+  /**
+   * Creates a new AssetsBundle which will configure the service to serve the static files
+   * located in {@code src/main/resources/${resourcePath}} as {@code /${uriPath}}. If no file name
+   * is in ${uriPath}, ${indexFile} is appended before serving. For example, given a
+   * {@code resourcePath} of {@code "/assets"} and a uriPath of {@code "/js"},
+   * {@code src/main/resources/assets/example.js} would be served up from {@code /js/example.js}.
+   *
+   * @param resourcePathToUriMappings a series of mappings from resource paths (in the classpath)
+   *                                  to the uri path that hosts the resource
+   * @param indexFile                 the name of the index file to use
+   * @param assetsName                the name of servlet mapping used for this assets bundle
+   */
+  public ConfiguredAssetsBundle(Map<String, String> resourcePathToUriMappings, String indexFile,
+                                String assetsName) {
+    this(resourcePathToUriMappings, indexFile, assetsName, DEFAULT_CACHE_SPEC);
+  }
+
+  /**
+   * Creates a new {@link ConfiguredAssetsBundle} which will configure the service to serve the
+   * static files located in {@code src/main/resources/${resourcePath}} as {@code /${uriPath}}. For
+   * example, given a {@code resourcePath} of {@code "/assets"} and a uriPath of {@code "/js"},
+   * {@code src/main/resources/assets/example.js} would be served up from {@code /js/example.js}.
+   *
+   * @param resourcePathToUriMappings a series of mappings from resource paths (in the classpath)
+   *                                  to the uri path that hosts the resource
+   * @param cacheBuilderSpec          the spec for the cache builder
+   * @see ConfiguredAssetsBundle#ConfiguredAssetsBundle(Map, String, String, CacheBuilderSpec)
+   */
+  public ConfiguredAssetsBundle(Map<String, String> resourcePathToUriMappings,
+                                CacheBuilderSpec cacheBuilderSpec) {
+    this(resourcePathToUriMappings, DEFAULT_INDEX_FILE, DEFAULT_SERVLET_MAPPING_NAME,
+            cacheBuilderSpec);
+  }
+
+  /**
+   * Creates a new AssetsBundle which will configure the service to serve the static files
+   * located in {@code src/main/resources/${resourcePath}} as {@code /${uriPath}}. If no file name
+   * is in ${uriPath}, ${indexFile} is appended before serving. For example, given a
+   * {@code resourcePath} of {@code "/assets"} and a uriPath of {@code "/js"},
+   * {@code src/main/resources/assets/example.js} would be served up from {@code /js/example.js}.
+   *
+   * @param resourcePathToUriMappings a series of mappings from resource paths (in the classpath)
+   *                                  to the uri path that hosts the resource
+   * @param indexFile                 the name of the index file to use
+   * @param cacheBuilderSpec          the spec for the cache builder
+   * @see ConfiguredAssetsBundle#ConfiguredAssetsBundle(Map, String, String,
+   * CacheBuilderSpec)
+   */
+  public ConfiguredAssetsBundle(Map<String, String> resourcePathToUriMappings, String indexFile,
+                                CacheBuilderSpec cacheBuilderSpec) {
+    this(resourcePathToUriMappings, indexFile, DEFAULT_SERVLET_MAPPING_NAME, cacheBuilderSpec);
+  }
+
+  /**
+   * Creates a new {@link ConfiguredAssetsBundle} which will configure the service to serve the
+   * static files located in {@code src/main/resources/${resourcePath}} as {@code /${uriPath}}. For
+   * example, given a {@code resourcePath} of {@code "/assets"} and a uriPath of {@code "/js"},
+   * {@code src/main/resources/assets/example.js} would be served up from {@code /js/example.js}.
+   *
+   * @param resourcePathToUriMappings a series of mappings from resource paths (in the classpath)
+   *                                  to the uri path that hosts the resource
+   * @param cacheBuilderSpec          the spec for the cache builder
+   * @param indexFile                 the name of the index file to use
+   * @param assetsName                the name of servlet mapping used for this assets bundle
+   */
+  public ConfiguredAssetsBundle(Map<String, String> resourcePathToUriMappings, String indexFile,
+                                String assetsName, CacheBuilderSpec cacheBuilderSpec) {
+    for (Map.Entry<String, String> mapping : resourcePathToUriMappings.entrySet()) {
+      String resourcePath = mapping.getKey();
+      checkArgument(resourcePath.startsWith("/"), "%s is not an absolute path", resourcePath);
+      checkArgument(!"/".equals(resourcePath), "%s is the classpath root", resourcePath);
+    }
+    this.resourcePathToUriMappings =
+            Iterables.unmodifiableIterable(resourcePathToUriMappings.entrySet());
     this.cacheBuilderSpec = cacheBuilderSpec;
-    this.uriPath = uriPath.endsWith("/") ? uriPath : (uriPath + '/');
     this.indexFile = indexFile;
     this.assetsName = assetsName;
   }
@@ -201,8 +304,6 @@ public class ConfiguredAssetsBundle implements ConfiguredBundle<AssetsBundleConf
 
   @Override
   public void run(AssetsBundleConfiguration bundleConfig, Environment env) throws Exception {
-    LOGGER.info("Registering ConfiguredAssetBundle with name: {} for path {}", assetsName,
-            uriPath + '*');
     AssetsConfiguration config = bundleConfig.getAssetsConfiguration();
 
     // Let the cache spec from the configuration override the one specified in the code
@@ -213,8 +314,19 @@ public class ConfiguredAssetsBundle implements ConfiguredBundle<AssetsBundleConf
     Iterable<Map.Entry<String, String>> overrides = config.getOverrides();
     Iterable<Map.Entry<String, String>> mimeTypes = config.getMimeTypes();
 
-    AssetServlet servlet = new AssetServlet(resourcePath, uriPath, indexFile, Charsets.UTF_8, spec,
-            overrides, mimeTypes);
-    env.servlets().addServlet(assetsName, servlet).addMapping(uriPath + "*");
+    AssetServlet servlet = new AssetServlet(resourcePathToUriMappings, indexFile, Charsets.UTF_8,
+            spec, overrides, mimeTypes);
+
+    for (Map.Entry<String, String> mapping : resourcePathToUriMappings) {
+      String mappingPath = mapping.getValue();
+      if (!mappingPath.endsWith("/")) {
+        mappingPath += '/';
+      }
+      mappingPath += "*";
+
+      LOGGER.info("Registering ConfiguredAssetBundle with name: {} for path {}", assetsName,
+              mappingPath);
+      env.servlets().addServlet(assetsName, servlet).addMapping(mappingPath);
+    }
   }
 }
