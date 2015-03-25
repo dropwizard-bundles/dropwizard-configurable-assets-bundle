@@ -44,6 +44,7 @@ public class SampleService extends Application<SampleConfiguration> {
 
     @Override
     public void initialize(Bootstrap<SampleConfiguration> bootstrap) {
+        // Map requests to /dashboard/${1} to be found in the class path at /assets/${1}.
         bootstrap.addBundle(new ConfiguredAssetsBundle("/assets/", "/dashboard/"));
     }
 
@@ -58,6 +59,8 @@ A sample local development config:
 ```yml
 assets:
   overrides:
+    # Override requests to /dashboard/${1} to instead look in 
+    # ${working directory}/src/main/resources/assets/${1}
     /dashboard: src/main/resources/assets/
 ```
 
