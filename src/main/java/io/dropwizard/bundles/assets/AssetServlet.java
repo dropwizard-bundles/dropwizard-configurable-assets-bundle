@@ -418,7 +418,7 @@ public class AssetServlet extends HttpServlet {
 
     private StaticAsset(byte[] resource, long lastModifiedTime) {
       this.resource = resource;
-      this.etag = Hashing.murmur3_128().hashBytes(resource).toString();
+      this.etag = '"' + Hashing.murmur3_128().hashBytes(resource).toString() + '"';
       this.lastModifiedTime = lastModifiedTime;
     }
 

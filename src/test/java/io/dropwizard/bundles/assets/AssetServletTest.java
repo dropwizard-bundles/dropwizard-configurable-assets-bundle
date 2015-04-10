@@ -202,7 +202,7 @@ public class AssetServletTest {
     final String secondEtag = response.get(HttpHeaders.ETAG);
 
     assertThat(firstEtag)
-            .isEqualTo("174a6dd7325e64c609eab14ab1d30b86")
+            .isEqualTo("\"174a6dd7325e64c609eab14ab1d30b86\"")
             .isEqualTo(secondEtag);
   }
 
@@ -215,9 +215,9 @@ public class AssetServletTest {
     final String secondEtag = response.get(HttpHeaders.ETAG);
 
     assertThat(firstEtag)
-            .isEqualTo("174a6dd7325e64c609eab14ab1d30b86");
+            .isEqualTo("\"174a6dd7325e64c609eab14ab1d30b86\"");
     assertThat(secondEtag)
-            .isEqualTo("26ae56a90cd78c6720c544707d22110b");
+            .isEqualTo("\"26ae56a90cd78c6720c544707d22110b\"");
   }
 
   @Test
