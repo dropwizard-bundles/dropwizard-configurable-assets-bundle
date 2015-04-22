@@ -14,7 +14,7 @@ developers to edit browser-interpreted files and reload them without needing to 
 <dependency>
   <groupId>io.dropwizard-bundles</groupId>
   <artifactId>dropwizard-configurable-assets-bundle</artifactId>
-  <version>0.8.0</version>
+  <version>0.8.1</version>
 </dependency>
 ```
 
