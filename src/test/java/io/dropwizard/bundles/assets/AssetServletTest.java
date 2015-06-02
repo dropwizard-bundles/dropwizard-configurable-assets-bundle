@@ -217,7 +217,7 @@ public class AssetServletTest {
     assertThat(firstEtag)
             .isEqualTo("\"174a6dd7325e64c609eab14ab1d30b86\"");
     assertThat(secondEtag)
-            .isEqualTo("\"26ae56a90cd78c6720c544707d22110b\"");
+            .isEqualTo("\"7a13c3f9f2be8379b5a2fb77a85e1d10\"");
   }
 
   @Test
