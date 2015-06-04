@@ -7,7 +7,10 @@ import com.google.common.collect.Iterables;
 import io.dropwizard.ConfiguredBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+
+import java.util.Iterator;
 import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +29,7 @@ public class ConfiguredAssetsBundle implements ConfiguredBundle<AssetsBundleConf
 
   private static final String DEFAULT_PATH = "/assets";
   public static final CacheBuilderSpec DEFAULT_CACHE_SPEC =
-          CacheBuilderSpec.parse("maximumSize=100");
+      CacheBuilderSpec.parse("maximumSize=100");
   private static final String DEFAULT_INDEX_FILE = "index.htm";
   private static final String DEFAULT_SERVLET_MAPPING_NAME = "assets";
 
@@ -73,7 +76,7 @@ public class ConfiguredAssetsBundle implements ConfiguredBundle<AssetsBundleConf
    */
   public ConfiguredAssetsBundle(String resourcePath, String uriPath) {
     this(resourcePath, uriPath, DEFAULT_INDEX_FILE, DEFAULT_SERVLET_MAPPING_NAME,
-            DEFAULT_CACHE_SPEC);
+        DEFAULT_CACHE_SPEC);
   }
 
   /**
@@ -117,7 +120,7 @@ public class ConfiguredAssetsBundle implements ConfiguredBundle<AssetsBundleConf
    */
   public ConfiguredAssetsBundle(CacheBuilderSpec cacheBuilderSpec) {
     this(DEFAULT_PATH, DEFAULT_PATH, DEFAULT_INDEX_FILE, DEFAULT_SERVLET_MAPPING_NAME,
-            cacheBuilderSpec);
+        cacheBuilderSpec);
   }
 
   /**
@@ -131,7 +134,7 @@ public class ConfiguredAssetsBundle implements ConfiguredBundle<AssetsBundleConf
    */
   public ConfiguredAssetsBundle(String resourcePath, CacheBuilderSpec cacheBuilderSpec) {
     this(resourcePath, resourcePath, DEFAULT_INDEX_FILE, DEFAULT_SERVLET_MAPPING_NAME,
-            cacheBuilderSpec);
+        cacheBuilderSpec);
   }
 
   /**
@@ -183,7 +186,7 @@ public class ConfiguredAssetsBundle implements ConfiguredBundle<AssetsBundleConf
   public ConfiguredAssetsBundle(String resourcePath, String uriPath, String indexFile,
                                 String assetsName, CacheBuilderSpec cacheBuilderSpec) {
     this(ImmutableMap.<String, String>builder().put(resourcePath, uriPath).build(), indexFile,
-            assetsName, cacheBuilderSpec);
+        assetsName, cacheBuilderSpec);
   }
 
   /**
@@ -199,7 +202,7 @@ public class ConfiguredAssetsBundle implements ConfiguredBundle<AssetsBundleConf
    */
   public ConfiguredAssetsBundle(Map<String, String> resourcePathToUriMappings) {
     this(resourcePathToUriMappings, DEFAULT_INDEX_FILE, DEFAULT_SERVLET_MAPPING_NAME,
-            DEFAULT_CACHE_SPEC);
+        DEFAULT_CACHE_SPEC);
   }
 
   /**
@@ -248,7 +251,7 @@ public class ConfiguredAssetsBundle implements ConfiguredBundle<AssetsBundleConf
   public ConfiguredAssetsBundle(Map<String, String> resourcePathToUriMappings,
                                 CacheBuilderSpec cacheBuilderSpec) {
     this(resourcePathToUriMappings, DEFAULT_INDEX_FILE, DEFAULT_SERVLET_MAPPING_NAME,
-            cacheBuilderSpec);
+        cacheBuilderSpec);
   }
 
   /**
@@ -290,7 +293,7 @@ public class ConfiguredAssetsBundle implements ConfiguredBundle<AssetsBundleConf
       checkArgument(!"/".equals(resourcePath), "%s is the classpath root", resourcePath);
     }
     this.resourcePathToUriMappings =
-            Iterables.unmodifiableIterable(resourcePathToUriMappings.entrySet());
+        Iterables.unmodifiableIterable(resourcePathToUriMappings.entrySet());
     this.cacheBuilderSpec = cacheBuilderSpec;
     this.indexFile = indexFile;
     this.assetsName = assetsName;
@@ -308,16 +311,23 @@ public class ConfiguredAssetsBundle implements ConfiguredBundle<AssetsBundleConf
 
     // Let the cache spec from the configuration override the one specified in the code
     CacheBuilderSpec spec = (config.getCacheSpec() != null)
-            ? CacheBuilderSpec.parse(config.getCacheSpec())
-            : cacheBuilderSpec;
+        ? CacheBuilderSpec.parse(config.getCacheSpec())
+        : cacheBuilderSpec;
 
     Iterable<Map.Entry<String, String>> overrides = config.getOverrides();
     Iterable<Map.Entry<String, String>> mimeTypes = config.getMimeTypes();
 
-    AssetServlet servlet = new AssetServlet(resourcePathToUriMappings, indexFile, Charsets.UTF_8,
-            spec, overrides, mimeTypes);
+    Iterable<Map.Entry<String, String>> servletResourcePathToUriMappings;
 
-    for (Map.Entry<String, String> mapping : resourcePathToUriMappings) {
+    if (!config.getResourcePathToUriMappings().isEmpty()) {
+      servletResourcePathToUriMappings = config.getResourcePathToUriMappings().entrySet();
+    } else {
+      servletResourcePathToUriMappings = resourcePathToUriMappings;
+    }
+    AssetServlet servlet = new AssetServlet(servletResourcePathToUriMappings, indexFile,
+        Charsets.UTF_8, spec, overrides, mimeTypes);
+
+    for (Map.Entry<String, String> mapping : servletResourcePathToUriMappings) {
       String mappingPath = mapping.getValue();
       if (!mappingPath.endsWith("/")) {
         mappingPath += '/';
@@ -325,7 +335,7 @@ public class ConfiguredAssetsBundle implements ConfiguredBundle<AssetsBundleConf
       mappingPath += "*";
 
       LOGGER.info("Registering ConfiguredAssetBundle with name: {} for path {}", assetsName,
-              mappingPath);
+          mappingPath);
       env.servlets().addServlet(assetsName, servlet).addMapping(mappingPath);
     }
   }
