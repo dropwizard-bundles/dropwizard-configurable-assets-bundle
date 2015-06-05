@@ -72,6 +72,32 @@ assets:
     /dashboard/images: /some/different/absolute/path/with/images
 ```
 
+Instead of defining the resource path to uri path mappings in java code, they also can be specified in the configuration file.
+```java
+public class SampleService extends Application<SampleConfiguration> {
+    ...
+
+    @Override
+    public void initialize(Bootstrap<SampleConfiguration> bootstrap) {
+        bootstrap.addBundle(new ConfiguredAssetsBundle());
+    }
+
+    @Override
+    public void run(SampleConfiguration configuration, Environment environment) {
+        ...
+    }
+}
+```
+
+```yml
+assets:
+  mappings:
+    /assets: /dashboard
+  overrides:
+    /dashboard/assets: /some/absolute/path/with/assets/
+    /dashboard/images: /some/different/absolute/path/with/images
+```
+
 ## Add Mime Types
 
 Dropwizard 0.8 allows you to add new mimetypes directly to the application context.
@@ -103,6 +129,7 @@ assets:
 
 You can map different folders to multiple top-level directories if you wish.
 
+Either in java code
 ```java
 public class SampleService extends Application<SampleConfiguration> {
     ...
@@ -117,4 +144,14 @@ public class SampleService extends Application<SampleConfiguration> {
         ));
     }
 }
+```
+
+or either in the configuration file
+```yml
+assets:
+  mappings:
+    /assets: /dashboard
+    /data: /static-data
+  overrides:
+    ...
 ```
