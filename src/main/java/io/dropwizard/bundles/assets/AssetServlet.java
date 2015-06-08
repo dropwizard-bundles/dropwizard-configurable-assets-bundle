@@ -19,6 +19,7 @@ import io.dropwizard.servlets.assets.ByteRange;
 import io.dropwizard.servlets.assets.ResourceURL;
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.List;
@@ -279,11 +280,13 @@ public class AssetServlet extends HttpServlet {
         final String absolutePath = SLASHES.trimFrom(mapping.getKey() + requestedResourcePath);
 
         try {
-          URL requestedResourceUrl = Resources.getResource(absolutePath);
-
+          URL requestedResourceUrl =
+              UrlUtil.switchFromZipToJarProtocolIfNeeded(Resources.getResource(absolutePath));
           if (ResourceURL.isDirectory(requestedResourceUrl)) {
             if (indexFilename != null) {
               requestedResourceUrl = Resources.getResource(absolutePath + '/' + indexFilename);
+              requestedResourceUrl =
+                  UrlUtil.switchFromZipToJarProtocolIfNeeded(requestedResourceUrl);
             } else {
               // resource mapped to directory but no index file defined
               continue;
@@ -434,4 +437,6 @@ public class AssetServlet extends HttpServlet {
       return lastModifiedTime;
     }
   }
+
+
 }
