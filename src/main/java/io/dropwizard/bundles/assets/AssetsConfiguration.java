@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
+import java.util.Collections;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 
@@ -67,11 +68,11 @@ public class AssetsConfiguration {
     return cacheSpec;
   }
 
-  public Iterable<Map.Entry<String, String>> getOverrides() {
-    return Iterables.unmodifiableIterable(overrides.entrySet());
+  public Map<String, String> getOverrides() {
+    return Collections.unmodifiableMap(overrides);
   }
 
-  public Iterable<Map.Entry<String, String>> getMimeTypes() {
-    return Iterables.unmodifiableIterable(mimeTypes.entrySet());
+  public Map<String, String> getMimeTypes() {
+    return Collections.unmodifiableMap(mimeTypes);
   }
 }

@@ -8,7 +8,6 @@ import io.dropwizard.ConfiguredBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 
-import java.util.Iterator;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -314,8 +313,8 @@ public class ConfiguredAssetsBundle implements ConfiguredBundle<AssetsBundleConf
         ? CacheBuilderSpec.parse(config.getCacheSpec())
         : cacheBuilderSpec;
 
-    Iterable<Map.Entry<String, String>> overrides = config.getOverrides();
-    Iterable<Map.Entry<String, String>> mimeTypes = config.getMimeTypes();
+    Iterable<Map.Entry<String, String>> overrides = config.getOverrides().entrySet();
+    Iterable<Map.Entry<String, String>> mimeTypes = config.getMimeTypes().entrySet();
 
     Iterable<Map.Entry<String, String>> servletResourcePathToUriMappings;
 
