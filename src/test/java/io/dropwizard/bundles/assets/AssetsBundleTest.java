@@ -2,11 +2,8 @@ package io.dropwizard.bundles.assets;
 
 import com.google.common.cache.CacheBuilderSpec;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.io.Resources;
 import io.dropwizard.jetty.setup.ServletEnvironment;
-import io.dropwizard.servlets.assets.ResourceURL;
 import io.dropwizard.setup.Environment;
-import java.net.URL;
 import java.util.List;
 import javax.servlet.ServletRegistration;
 import org.junit.Before;
