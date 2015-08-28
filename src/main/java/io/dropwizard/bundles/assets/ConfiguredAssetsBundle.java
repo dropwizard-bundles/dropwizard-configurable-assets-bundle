@@ -332,7 +332,7 @@ public class ConfiguredAssetsBundle implements ConfiguredBundle<AssetsBundleConf
         mappingPath += '/';
       }
       mappingPath += "*";
-
+      servlet.setCacheControlHeader(config.getCacheControlHeader());
       LOGGER.info("Registering ConfiguredAssetBundle with name: {} for path {}", assetsName,
           mappingPath);
       env.servlets().addServlet(assetsName, servlet).addMapping(mappingPath);
