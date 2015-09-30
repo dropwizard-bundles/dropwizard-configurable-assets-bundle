@@ -49,6 +49,8 @@ public class AssetServlet extends HttpServlet {
 
   private Charset defaultCharset;
 
+  private String cacheControlHeader = null;
+
   /**
    * Creates a new {@code AssetServlet} that serves static assets loaded from {@code resourceURL}
    * (typically a file: or jar: URL). The assets are served at URIs rooted at {@code uriPath}. For
@@ -81,6 +83,14 @@ public class AssetServlet extends HttpServlet {
     this.cacheSpec = spec;
     this.mimeTypes = new MimeTypes();
     this.setMimeTypes(mimeTypes);
+  }
+
+  public void setCacheControlHeader(String cacheControlHeader) {
+    this.cacheControlHeader = cacheControlHeader;
+  }
+
+  public String getCacheControlHeader() {
+    return cacheControlHeader;
   }
 
   /**

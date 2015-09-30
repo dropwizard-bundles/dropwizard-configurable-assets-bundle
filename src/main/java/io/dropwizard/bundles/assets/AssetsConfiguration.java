@@ -36,6 +36,9 @@ public class AssetsConfiguration {
   @JsonProperty
   private Map<String, String> mimeTypes = Maps.newHashMap();
 
+  @JsonProperty
+  private String cacheControlHeader = null;
+
   private Map<String, String> resourcePathToUriMappings;
   /**
    * A series of mappings from resource paths (in the classpath)
@@ -75,4 +78,9 @@ public class AssetsConfiguration {
   public Map<String, String> getMimeTypes() {
     return Collections.unmodifiableMap(mimeTypes);
   }
+
+  public String getCacheControlHeader() {
+    return cacheControlHeader;
+  }
+
 }
