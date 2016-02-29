@@ -4,7 +4,7 @@
 
     <groupId>io.dropwizard-bundles</groupId>
     <artifactId>dropwizard-configurable-assets-bundle</artifactId>
-    <version>0.8.4-SNAPSHOT</version>
+    <version>0.8.4</version>
     <packaging>jar</packaging>
 
     <parent>
