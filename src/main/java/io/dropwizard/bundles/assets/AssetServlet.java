@@ -79,7 +79,14 @@ public class AssetServlet extends HttpServlet {
                       Iterable<Map.Entry<String, String>> mimeTypes) {
     this.defaultCharset = defaultCharset;
     AssetLoader loader = new AssetLoader(resourcePathToUriPathMapping, indexFile, overrides);
-    this.cache = CacheBuilder.from(spec).weigher(new AssetSizeWeigher()).build(loader);
+
+    CacheBuilder<Object, Object> cacheBuilder = CacheBuilder.from(spec);
+    // Don't add the weigher if we are using maximumSize instead of maximumWeight.
+    if (spec.toParsableString().contains("maximumWeight=")) {
+      cacheBuilder.weigher(new AssetSizeWeigher());
+    }
+    this.cache = cacheBuilder.build(loader);
+
     this.cacheSpec = spec;
     this.mimeTypes = new MimeTypes();
     this.setMimeTypes(mimeTypes);
