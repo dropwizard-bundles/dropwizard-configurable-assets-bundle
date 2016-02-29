@@ -4,7 +4,7 @@
 
     <groupId>io.dropwizard-bundles</groupId>
     <artifactId>dropwizard-configurable-assets-bundle</artifactId>
-    <version>0.8.1-2-SNAPSHOT</version>
+    <version>0.8.2-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <parent>
@@ -42,11 +42,11 @@
             <url>http://github.com/nbauernfeind/</url>
         </developer>
     </developers>
-    
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <dropwizard.version>0.8.1</dropwizard.version>
+        <dropwizard.version>0.8.2</dropwizard.version>
         <guava.version>18.0</guava.version>
         <jetty.version>9.2.9.v20150224</jetty.version>
     </properties>
