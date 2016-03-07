@@ -26,7 +26,7 @@ public class AssetsBundleTest {
   private final AssetsBundleConfiguration defaultConfiguration = new AssetsBundleConfiguration() {
     @Override
     public AssetsConfiguration getAssetsConfiguration() {
-      return new AssetsConfiguration();
+      return AssetsConfiguration.builder().build();
     }
   };
 
@@ -111,12 +111,7 @@ public class AssetsBundleTest {
     AssetsBundleConfiguration config = new AssetsBundleConfiguration() {
       @Override
       public AssetsConfiguration getAssetsConfiguration() {
-        return new AssetsConfiguration() {
-          @Override
-          public String getCacheSpec() {
-            return cacheSpec;
-          }
-        };
+        return AssetsConfiguration.builder().cacheSpec(cacheSpec).build();
       }
     };
 
