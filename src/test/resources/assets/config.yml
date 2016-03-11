@@ -1,0 +1,7 @@
+cacheSpec: abc
+mappings:
+  /assets: /dashboard
+mimeTypes:
+  woff: application/font-woff
+overrides:
+  /: ../example-app/build/src
