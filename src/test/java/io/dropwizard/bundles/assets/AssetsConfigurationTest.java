@@ -19,12 +19,7 @@ public class AssetsConfigurationTest {
   public void setupConfig() throws Exception {
     final Map<String, String> mappings = new HashMap<>();
     mappings.put(A_RESOURCE_PATH, AN_URI);
-    config = new AssetsConfiguration() {
-      @Override
-      protected Map<String, String> mappings() {
-        return mappings;
-      }
-    };
+    config = AssetsConfiguration.builder().mappings(mappings).build();
   }
 
   @After

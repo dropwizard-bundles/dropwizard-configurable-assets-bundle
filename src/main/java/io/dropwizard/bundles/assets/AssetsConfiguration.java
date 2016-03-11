@@ -1,22 +1,18 @@
 package io.dropwizard.bundles.assets;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-
 import java.util.Collections;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 public class AssetsConfiguration {
   public static final String SLASH = "/";
+
   @JsonProperty
   private Map<String, String> mappings = Maps.newHashMap();
-
-  protected Map<String, String> mappings() {
-    return mappings;
-  }
 
   /**
    * Initialize cacheSpec to null so that whatever may be specified by code is able to be
@@ -40,6 +36,18 @@ public class AssetsConfiguration {
   private String cacheControlHeader = null;
 
   private Map<String, String> resourcePathToUriMappings;
+
+  private AssetsConfiguration(
+      String cacheSpec,
+      Map<String, String> mappings,
+      Map<String, String> mimeTypes,
+      Map<String, String> overrides) {
+    this.cacheSpec = cacheSpec;
+    this.mappings = Collections.unmodifiableMap(mappings);
+    this.mimeTypes = Collections.unmodifiableMap(mimeTypes);
+    this.overrides = Collections.unmodifiableMap(overrides);
+  }
+
   /**
    * A series of mappings from resource paths (in the classpath)
    * to the uri path that hosts the resource
@@ -62,6 +70,10 @@ public class AssetsConfiguration {
     return value != null ? (value.endsWith(SLASH) ? value : value + SLASH) : SLASH;
   }
 
+  protected Map<String, String> mappings() {
+    return mappings;
+  }
+
   /**
    * The caching specification for how to memoize assets.
    *
@@ -81,6 +93,44 @@ public class AssetsConfiguration {
 
   public String getCacheControlHeader() {
     return cacheControlHeader;
+  }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static final class Builder {
+
+    private String cacheSpec;
+    private Map<String, String> mappings = Maps.newHashMap();
+    private Map<String, String> mimeTypes = Maps.newHashMap();
+    private Map<String, String> overrides = Maps.newHashMap();
+
+    private Builder() {}
+
+    public Builder cacheSpec(String cacheSpec) {
+      this.cacheSpec = cacheSpec;
+      return this;
+    }
+
+    public Builder mappings(Map<String, String> mappings) {
+      this.mappings = Preconditions.checkNotNull(mappings);
+      return this;
+    }
+
+    public Builder mimeTypes(Map<String, String> mimeTypes) {
+      this.mimeTypes = Preconditions.checkNotNull(mimeTypes);
+      return this;
+    }
+
+    public Builder overrides(Map<String, String> overrides) {
+      this.overrides = Preconditions.checkNotNull(overrides);
+      return this;
+    }
+
+    public AssetsConfiguration build() {
+      return new AssetsConfiguration(cacheSpec, mappings, mimeTypes, overrides);
+    }
   }
 
 }
