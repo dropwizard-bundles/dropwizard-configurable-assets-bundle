@@ -1,16 +1,26 @@
 package io.dropwizard.bundles.assets;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.cache.CacheBuilderSpec;
 import com.google.common.collect.ImmutableMap;
+
+import io.dropwizard.jackson.Jackson;
 import io.dropwizard.jetty.setup.ServletEnvironment;
 import io.dropwizard.setup.Environment;
+
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.List;
+
 import javax.servlet.ServletRegistration;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.atLeastOnce;
@@ -37,6 +47,18 @@ public class AssetsBundleTest {
   @Before
   public void setUp() throws Exception {
     when(environment.servlets()).thenReturn(servletEnvironment);
+  }
+
+  @Test
+  public void deserialzeAssetsConfiguration() throws IOException {
+    ObjectMapper mapper = Jackson.newObjectMapper(new YAMLFactory());
+    FileInputStream inputStream = new FileInputStream("src/test/resources/assets/config.yml");
+    AssetsConfiguration assets = mapper.readValue(inputStream, AssetsConfiguration.class);
+    assertEquals(assets.getCacheSpec(), "abc");
+    assertEquals(assets.getResourcePathToUriMappings(), ImmutableMap.of("/assets/","/dashboard/"));
+    assertEquals(assets.getMimeTypes(), ImmutableMap.of("woff", "application/font-woff"));
+    assertEquals(assets.getOverrides(), ImmutableMap.of("/","../example-app/build/src"));
+    assertNull(assets.getCacheControlHeader());
   }
 
   @Test

@@ -1,6 +1,7 @@
 package io.dropwizard.bundles.assets;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -8,10 +9,10 @@ import java.util.Collections;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 
+@JsonDeserialize(builder = AssetsConfiguration.Builder.class)
 public class AssetsConfiguration {
   public static final String SLASH = "/";
 
-  @JsonProperty
   private Map<String, String> mappings = Maps.newHashMap();
 
   /**
@@ -21,27 +22,26 @@ public class AssetsConfiguration {
    * @see ConfiguredAssetsBundle#DEFAULT_CACHE_SPEC
    */
 
-  @JsonProperty
   private String cacheSpec = null;
 
   @NotNull
-  @JsonProperty
   private Map<String, String> overrides = Maps.newHashMap();
 
   @NotNull
-  @JsonProperty
   private Map<String, String> mimeTypes = Maps.newHashMap();
 
-  @JsonProperty
   private String cacheControlHeader = null;
 
   private Map<String, String> resourcePathToUriMappings;
 
   private AssetsConfiguration(
+      String cacheControlHeader,
       String cacheSpec,
       Map<String, String> mappings,
       Map<String, String> mimeTypes,
       Map<String, String> overrides) {
+
+    this.cacheControlHeader = cacheControlHeader;
     this.cacheSpec = cacheSpec;
     this.mappings = Collections.unmodifiableMap(mappings);
     this.mimeTypes = Collections.unmodifiableMap(mimeTypes);
@@ -100,13 +100,23 @@ public class AssetsConfiguration {
   }
 
   public static final class Builder {
-
+    @JsonProperty
+    private String cacheControlHeader;
+    @JsonProperty
     private String cacheSpec;
+    @JsonProperty
     private Map<String, String> mappings = Maps.newHashMap();
+    @JsonProperty
     private Map<String, String> mimeTypes = Maps.newHashMap();
+    @JsonProperty
     private Map<String, String> overrides = Maps.newHashMap();
 
     private Builder() {}
+
+    public Builder cacheControlHeader(String cacheControlHeader) {
+      this.cacheControlHeader = cacheControlHeader;
+      return this;
+    }
 
     public Builder cacheSpec(String cacheSpec) {
       this.cacheSpec = cacheSpec;
@@ -129,7 +139,7 @@ public class AssetsConfiguration {
     }
 
     public AssetsConfiguration build() {
-      return new AssetsConfiguration(cacheSpec, mappings, mimeTypes, overrides);
+      return new AssetsConfiguration(cacheControlHeader, cacheSpec, mappings, mimeTypes, overrides);
     }
   }
 
