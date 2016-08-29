@@ -14,7 +14,7 @@ developers to edit browser-interpreted files and reload them without needing to 
 <dependency>
   <groupId>io.dropwizard-bundles</groupId>
   <artifactId>dropwizard-configurable-assets-bundle</artifactId>
-  <version>0.9.2</version>
+  <version>1.0.0</version>
 </dependency>
 ```
 
@@ -100,7 +100,7 @@ assets:
 
 ## Add Mime Types
 
-Dropwizard 0.8 allows you to add new mimetypes directly to the application context.
+Since 0.8, Dropwizard allows you to add new mimetypes directly to the application context.
 
 ```java
 public class SampleService extends Application<SampleConfiguration> {
