@@ -26,7 +26,7 @@ public class SampleConfiguration extends Configuration implements AssetsBundleCo
   @Valid
   @NotNull
   @JsonProperty
-  private final AssetsConfiguration assets = new AssetsConfiguration();
+  private final AssetsConfiguration assets = AssetsConfiguration.builder().build();
 
   @Override
   public AssetsConfiguration getAssetsConfiguration() {
