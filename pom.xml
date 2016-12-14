@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>dropwizard-configurable-assets-bundle</artifactId>
-  <version>1.0.5</version>  <!-- Make sure to keep this in sync with the parent pom version above. -->
+  <version>1.0.6-SNAPSHOT</version>  <!-- Make sure to keep this in sync with the parent pom version above. -->
   <packaging>jar</packaging>
 
   <name>Dropwizard Configurable Asset Bundle</name>
@@ -27,7 +27,7 @@
     <url>https://github.com/dropwizard-bundles/dropwizard-configurable-assets-bundle</url>
     <connection>scm:git:git@github.com:dropwizard-bundles/dropwizard-configurable-assets-bundle.git</connection>
     <developerConnection>scm:git:git@github.com:dropwizard-bundles/dropwizard-configurable-assets-bundle.git</developerConnection>
-    <tag>v1.0.5</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <developers>
