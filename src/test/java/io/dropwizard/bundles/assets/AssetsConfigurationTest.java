@@ -1,19 +1,17 @@
 package io.dropwizard.bundles.assets;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.Assert;
-
-
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 public class AssetsConfigurationTest {
   private AssetsConfiguration config;
 
-  private final static String A_RESOURCE_PATH = "/a/resource/path";
-  private final static String AN_URI = "/an/uri";
+  private static final String A_RESOURCE_PATH = "/a/resource/path";
+  private static final String AN_URI = "/an/uri";
 
   @Before
   public void setupConfig() throws Exception {

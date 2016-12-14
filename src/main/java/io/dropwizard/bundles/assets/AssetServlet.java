@@ -196,7 +196,8 @@ public class AssetServlet extends HttpServlet {
           if (defaultCharset != null && mediaType.is(MediaType.ANY_TEXT_TYPE)) {
             mediaType = mediaType.withCharset(defaultCharset);
           }
-        } catch (IllegalArgumentException expected) {
+        } catch (IllegalArgumentException ignored) {
+          // Ignored
         }
       }
 

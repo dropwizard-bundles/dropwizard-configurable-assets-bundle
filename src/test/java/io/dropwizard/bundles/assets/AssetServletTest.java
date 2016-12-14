@@ -76,6 +76,7 @@ public class AssetServletTest {
   public static class NoCharsetAssetServlet extends AssetServlet {
     private static final long serialVersionUID = 1L;
 
+    /** Constructor. */
     public NoCharsetAssetServlet() {
       super(resourceMapping(RESOURCE_PATH, NOCHARSET_SERVLET), null, DEFAULT_CHARSET,
               DEFAULT_CACHE_SPEC, EMPTY_OVERRIDES, EMPTY_MIMETYPES);
@@ -84,6 +85,9 @@ public class AssetServletTest {
   }
 
   public static class MimeMappingsServlet extends AssetServlet {
+    private static final long serialVersionUID = 1L;
+
+    /** Constructor. */
     public MimeMappingsServlet() {
       super(resourceMapping(RESOURCE_PATH, MIME_SERVLET), null, DEFAULT_CHARSET, DEFAULT_CACHE_SPEC,
               EMPTY_OVERRIDES, EMPTY_MIMETYPES);
@@ -95,6 +99,9 @@ public class AssetServletTest {
   }
 
   public static class MultipleMappingsServlet extends AssetServlet {
+    private static final long serialVersionUID = 1L;
+
+    /** Constructor. */
     public MultipleMappingsServlet() {
       super(ImmutableMap.<String, String>builder()
                       .put(RESOURCE_PATH, MM_ASSET_SERVLET)
@@ -216,8 +223,8 @@ public class AssetServletTest {
 
     assertThat(firstEtag)
             .isEqualTo("\"174a6dd7325e64c609eab14ab1d30b86\"");
-    assertThat(secondEtag.equals("\"26ae56a90cd78c6720c544707d22110b\"") ||
-            secondEtag.equals("\"7a13c3f9f2be8379b5a2fb77a85e1d10\""));
+    assertThat(secondEtag.equals("\"26ae56a90cd78c6720c544707d22110b\"")
+        || secondEtag.equals("\"7a13c3f9f2be8379b5a2fb77a85e1d10\""));
   }
 
   @Test
@@ -476,7 +483,7 @@ public class AssetServletTest {
     response = makeRequest(MIME_SERVLET + "foo.bar");
     assertThat(response.getStatus())
             .isEqualTo(200);
-    assertThat(response.getStringField(HttpHeader.CONTENT_TYPE))
+    assertThat(response.get(HttpHeader.CONTENT_TYPE))
             .isEqualTo("application/bar");
   }
 
@@ -485,7 +492,7 @@ public class AssetServletTest {
     response = makeRequest(MIME_SERVLET + "example.txt");
     assertThat(response.getStatus())
             .isEqualTo(200);
-    assertThat(response.getStringField(HttpHeader.CONTENT_TYPE))
+    assertThat(response.get(HttpHeader.CONTENT_TYPE))
             .isEqualTo("application/foo");
   }
 
