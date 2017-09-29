@@ -181,6 +181,9 @@ public class AssetServlet extends HttpServlet {
 
       resp.setDateHeader(HttpHeaders.LAST_MODIFIED, cachedAsset.getLastModifiedTime());
       resp.setHeader(HttpHeaders.ETAG, cachedAsset.getETag());
+      if (cacheControlHeader != null) {
+        resp.setHeader(HttpHeaders.CACHE_CONTROL, cacheControlHeader);
+      }
 
 
       String mimeTypeOfExtension = mimeTypes.getMimeByExtension(req.getRequestURI());
