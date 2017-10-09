@@ -34,6 +34,7 @@ public class AssetServletTest {
   private static final String MM_ASSET_SERVLET = "/mm_assets/";
   private static final String MM_JSON_SERVLET = "/mm_json/";
   private static final String ROOT_SERVLET = "/";
+  private static final String CACHE_SERVLET = "/cached/";
   private static final String RESOURCE_PATH = "/assets";
   private static final String JSON_RESOURCE_PATH = "/json";
 
@@ -112,6 +113,17 @@ public class AssetServletTest {
     }
   }
 
+  public static class CachingServlet extends AssetServlet {
+    private static final long serialVersionUID = -1L;
+
+    /** Constructor. */
+    public CachingServlet() {
+      super(resourceMapping(RESOURCE_PATH, CACHE_SERVLET),null, DEFAULT_CHARSET, DEFAULT_CACHE_SPEC,
+              EMPTY_OVERRIDES, EMPTY_MIMETYPES);
+      setCacheControlHeader("public");
+    }
+  }
+
   private final ServletTester servletTester = new ServletTester();
   private final HttpTester.Request request = HttpTester.newRequest();
   private HttpTester.Response response;
@@ -132,8 +144,9 @@ public class AssetServletTest {
     servletTester.addServlet(NoCharsetAssetServlet.class, NOCHARSET_SERVLET + '*');
     servletTester.addServlet(RootAssetServlet.class, ROOT_SERVLET + '*');
     servletTester.addServlet(MimeMappingsServlet.class, MIME_SERVLET + '*');
+    servletTester.addServlet(CachingServlet.class, CACHE_SERVLET + '*');
 
-    ServletHolder servlet = new ServletHolder(new MultipleMappingsServlet());
+    ServletHolder servlet = new ServletHolder(MultipleMappingsServlet.class);
     servletTester.addServlet(servlet, MM_ASSET_SERVLET + '*');
     servletTester.addServlet(servlet, MM_JSON_SERVLET + '*');
     servletTester.start();
@@ -520,5 +533,19 @@ public class AssetServletTest {
     response = makeRequest(MM_JSON_SERVLET + "/json%20only.txt");
     assertThat(response.getStatus())
             .isEqualTo(200);
+  }
+
+  @Test
+  public void noCacheControlHeaderByDefault() throws Exception {
+    response = makeRequest();
+    assertThat(response.getStatus()).isEqualTo(200);
+    assertThat(response.get(HttpHeader.CACHE_CONTROL)).isNull();
+  }
+
+  @Test
+  public void servesCacheControlHeader() throws Exception {
+    response = makeRequest(CACHE_SERVLET + "example.txt");
+    assertThat(response.getStatus()).isEqualTo(200);
+    assertThat(response.get(HttpHeader.CACHE_CONTROL)).isEqualTo("public");
   }
 }
