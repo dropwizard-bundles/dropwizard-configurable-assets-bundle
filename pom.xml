@@ -5,11 +5,11 @@
   <parent>
     <groupId>io.dropwizard-bundles</groupId>
     <artifactId>parent-pom</artifactId>
-    <version>1.1.4</version>
+    <version>1.2.2</version>
   </parent>
 
   <artifactId>dropwizard-configurable-assets-bundle</artifactId>
-  <version>1.1.5-SNAPSHOT</version>  <!-- Make sure to keep this in sync with the parent pom version above. -->
+  <version>1.2.2-SNAPSHOT</version>  <!-- Make sure to keep this in sync with the parent pom version above. -->
   <packaging>jar</packaging>
 
   <name>Dropwizard Configurable Asset Bundle</name>
@@ -25,8 +25,8 @@
 
   <scm>
     <url>https://github.com/dropwizard-bundles/dropwizard-configurable-assets-bundle</url>
-    <connection>scm:git:git@github.com:dropwizard-bundles/dropwizard-configurable-assets-bundle.git</connection>
-    <developerConnection>scm:git:git@github.com:dropwizard-bundles/dropwizard-configurable-assets-bundle.git</developerConnection>
+    <connection>scm:git:https://github.com/dropwizard-bundles/dropwizard-configurable-assets-bundle</connection>
+    <developerConnection>scm:git:https://github.com/dropwizard-bundles/dropwizard-configurable-assets-bundle</developerConnection>
     <tag>HEAD</tag>
   </scm>
 
