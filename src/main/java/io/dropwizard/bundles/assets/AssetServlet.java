@@ -231,9 +231,26 @@ public class AssetServlet extends HttpServlet {
   }
 
   private boolean isCachedClientSide(HttpServletRequest req, Asset cachedAsset) {
-    return cachedAsset.getETag().equals(req.getHeader(HttpHeaders.IF_NONE_MATCH))
-            || (req.getDateHeader(HttpHeaders.IF_MODIFIED_SINCE)
-            >= cachedAsset.getLastModifiedTime());
+    String ifNoneMatchHeader = req.getHeader(HttpHeaders.IF_NONE_MATCH);
+    long ifModifiedSinceHeader = req.getDateHeader(HttpHeaders.IF_MODIFIED_SINCE);
+
+    boolean ifNoneMatchHeaderExists = ifNoneMatchHeader != null && !ifNoneMatchHeader.isEmpty();
+    boolean ifModifiedSinceHeaderExists = ifModifiedSinceHeader >= 0;
+
+    // If there is an If-None-Match header, determine caching based on eTag.
+    // Per RFC 7232, if If-None-Match is present, ignore If-Modified-Since.
+    if (ifNoneMatchHeaderExists) {
+      return cachedAsset.getETag().equals(ifNoneMatchHeader);
+    } else if (ifModifiedSinceHeaderExists) {
+      // If there is no If-None-Match header, but there is an If-Modified-Since header,
+      // determine caching based on last modified time.
+      return ifModifiedSinceHeader >= cachedAsset.getLastModifiedTime();
+    } else {
+      // If there is neither an If-None-Match header nor am If-Modified-Since header,
+      // we cannot determine that the entity is cached.
+      return false;
+    }
+
   }
 
   /**
