@@ -411,6 +411,58 @@ public class AssetServletTest {
   }
 
   @Test
+  // Verify conformance with the HTTP/1.1 spec which requires ignoring the If-Modified-Since
+  // header when the If-None-Match header is present (RFC 7232).
+  public void supportsIfNoneMatchAndIfModifiedSinceRequests() throws Exception {
+    response = makeRequest();
+    final long lastModifiedTime = response.getDateField(HttpHeaders.LAST_MODIFIED);
+    final String correctEtag = response.get(HttpHeaders.ETAG);
+
+    request.putDateField(HttpHeaders.IF_MODIFIED_SINCE, lastModifiedTime);
+    request.setHeader(HttpHeaders.IF_NONE_MATCH, correctEtag);
+    response = makeRequest();
+    final int statusWithMatchingLastModifiedTimeAndMatchingEtag = response.getStatus();
+
+    request.putDateField(HttpHeaders.IF_MODIFIED_SINCE, lastModifiedTime - 100);
+    request.setHeader(HttpHeaders.IF_NONE_MATCH, correctEtag);
+    response = makeRequest();
+    final int statusWithStaleLastModifiedTimeAndMatchingEtag = response.getStatus();
+
+    request.putDateField(HttpHeaders.IF_MODIFIED_SINCE, lastModifiedTime + 100);
+    request.setHeader(HttpHeaders.IF_NONE_MATCH, correctEtag);
+    response = makeRequest();
+    final int statusWithRecentLastModifiedTimeAndMatchingEtag = response.getStatus();
+
+    request.putDateField(HttpHeaders.IF_MODIFIED_SINCE, lastModifiedTime);
+    request.setHeader(HttpHeaders.IF_NONE_MATCH, correctEtag + "FOO");
+    response = makeRequest();
+    final int statusWithMatchingLastModifiedTimeAndNonMatchingEtag = response.getStatus();
+
+    request.putDateField(HttpHeaders.IF_MODIFIED_SINCE, lastModifiedTime - 100);
+    request.setHeader(HttpHeaders.IF_NONE_MATCH, correctEtag + "FOO");
+    response = makeRequest();
+    final int statusWithStaleLastModifiedTimeAndNonMatchingEtag = response.getStatus();
+
+    request.putDateField(HttpHeaders.IF_MODIFIED_SINCE, lastModifiedTime + 100);
+    request.setHeader(HttpHeaders.IF_NONE_MATCH, correctEtag + "FOO");
+    response = makeRequest();
+    final int statusWithRecentLastModifiedTimeAndNonMatchingEtag = response.getStatus();
+
+    assertThat(statusWithMatchingLastModifiedTimeAndMatchingEtag)
+            .isEqualTo(304);
+    assertThat(statusWithStaleLastModifiedTimeAndMatchingEtag)
+            .isEqualTo(304);
+    assertThat(statusWithRecentLastModifiedTimeAndMatchingEtag)
+            .isEqualTo(304);
+    assertThat(statusWithMatchingLastModifiedTimeAndNonMatchingEtag)
+            .isEqualTo(200);
+    assertThat(statusWithStaleLastModifiedTimeAndNonMatchingEtag)
+            .isEqualTo(200);
+    assertThat(statusWithRecentLastModifiedTimeAndNonMatchingEtag)
+            .isEqualTo(200);
+  }
+
+  @Test
   public void guessesMimeTypes() throws Exception {
     response = makeRequest();
     assertThat(response.getStatus())
